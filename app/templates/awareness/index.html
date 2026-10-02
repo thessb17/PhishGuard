@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import empty_state %}
+{% block title %}Awareness training{% endblock %}
+{% block page_title %}Security awareness training{% endblock %}
+{% block page_subtitle %}Twelve modules covering the phishing techniques seen in the wild{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-1">
+  <div class="col-xl-8">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-book"></i> Training modules</h2><span class="pg-hint">{{ topics|length }} modules</span></div>
+      <div class="pg-card-body">
+        <div class="row g-3">
+          {% for topic in topics %}
+            <div class="col-md-6">
+              <a href="{{ url_for('awareness.topic', slug=topic.slug) }}" class="pg-indicator sev-info d-block h-100" style="text-decoration:none">
+                <div class="pg-indicator-head">
+                  <span class="pg-indicator-title"><i class="bi {{ topic.icon }}"></i> {{ topic.title }}</span>
+                  <i class="bi bi-arrow-right text-dim"></i>
+                </div>
+                <div class="pg-indicator-meta">{{ topic.summary }}</div>
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-patch-question"></i> {{ quiz.title }}</h2></div>
+      <div class="pg-card-body">
+        <p class="text-muted-2" style="font-size:.86rem">{{ quiz.description }}</p>
+        <dl class="pg-kv mb-3">
+          <dt>Questions</dt><dd>{{ quiz.question_count }}</dd>
+          <dt>Pass mark</dt><dd>{{ quiz.pass_mark }}%</dd>
+          <dt>Your best score</dt><dd>{% if best is not none %}<strong>{{ best }}%</strong>{% else %}not attempted{% endif %}</dd>
+        </dl>
+        <a class="btn btn-primary w-100" href="{{ url_for('awareness.quiz') }}"><i class="bi bi-play-circle"></i> Start the assessment</a>
+      </div>
+    </div>
+
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-clock-history"></i> Your attempts</h2></div>
+      <div class="pg-table-wrap">
+        <table class="pg-table">
+          <thead><tr><th>Score</th><th>Correct</th><th>Result</th><th>Date</th></tr></thead>
+          <tbody>
+            {% for attempt in attempts %}
+              <tr>
+                <td><strong>{{ attempt.score }}%</strong></td>
+                <td>{{ attempt.correct_count }}/{{ attempt.total_questions }}</td>
+                <td><span class="pg-badge pg-badge-{{ 'success' if attempt.passed else 'danger' }}">{{ 'PASS' if attempt.passed else 'FAIL' }}</span></td>
+                <td class="text-muted-2"><a href="{{ url_for('awareness.quiz_result', attempt_id=attempt.id) }}">{{ attempt.completed_at|fmt_datetime }}</a></td>
+              </tr>
+            {% else %}
+              <tr><td colspan="4">{{ empty_state('bi-journal', 'No attempts yet.') }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

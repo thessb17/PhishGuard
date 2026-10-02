@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import event_badge %}
+{% block title %}Security Awareness Simulation{% endblock %}
+{% block page_title %}Security Awareness Simulation{% endblock %}
+{% block page_subtitle %}No data was collected — this is a training page{% endblock %}
+
+{% block content %}
+<div class="pg-landing-hero">
+  <div class="d-flex align-items-start gap-3">
+    <i class="bi bi-shield-exclamation" style="font-size:2.4rem;color:#ff8b8d"></i>
+    <div>
+      <h1>You interacted with a simulated phishing message.</h1>
+      <p class="mb-2 text-muted-2">
+        This was a controlled security-awareness exercise run by your organisation through
+        PhishGuard. <strong>Nothing bad happened:</strong> no password was requested, no data was
+        captured, and no account was affected. In a real attack, this click could have opened a
+        credential-harvesting page or triggered a download.
+      </p>
+      <div class="d-flex flex-wrap gap-2">
+        <span class="pg-badge pg-badge-info">Campaign: {{ campaign.name }}</span>
+        <span class="pg-badge pg-badge-neutral">Message: {{ target.simulated_message_id }}</span>
+        <span class="pg-badge pg-badge-{{ 'low' if awareness_score >= 70 else ('medium' if awareness_score >= 50 else 'high') }}">
+          Awareness score: {{ awareness_score }}/100
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-xl-7">
+    <div class="pg-card">
+      <div class="pg-card-header">
+        <h2><i class="bi bi-flag"></i> Suspicious indicators in this message</h2>
+        <span class="pg-hint">Why it was risky</span>
+      </div>
+      <div class="pg-card-body">
+        {% for indicator in template.indicators %}
+          <div class="pg-flag">
+            <div class="pg-flag-num">{{ loop.index }}</div>
+            <div>
+              <div style="font-weight:600;font-size:.88rem">{{ indicator.title }}</div>
+              <div class="text-muted-2" style="font-size:.83rem">{{ indicator.detail }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-eye"></i> How to spot attacks like this</h2></div>
+      <div class="pg-card-body">
+        <ul class="pg-feature-list mb-3">
+          {% for point in template.teaching_points %}
+            <li><i class="bi bi-check2-circle"></i><span>{{ point }}</span></li>
+          {% endfor %}
+        </ul>
+        <div class="pg-note">{{ template.legitimate_equivalent }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-5">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-megaphone"></i> Reporting guidance</h2></div>
+      <div class="pg-card-body">
+        <ol style="font-size:.87rem;padding-left:1.1rem" class="text-muted-2 mb-3">
+          <li class="mb-2">Use the <strong>report phishing</strong> button in your mail client — do not forward the message as plain text, because that strips the headers analysts need.</li>
+          <li class="mb-2">If there is no button, attach the original message (.eml or .msg) to a new email addressed to your security team.</li>
+          <li class="mb-2">Say whether you clicked, downloaded anything or entered information anywhere. Speed matters far more than embarrassment.</li>
+          <li>Delete the message afterwards, and do not warn colleagues by forwarding the original.</li>
+        </ol>
+        <div class="pg-note">
+          Reporting is blame-free. Security teams would rather review ten false alarms than miss
+          the one real intrusion.
+        </div>
+      </div>
+    </div>
+
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-database-lock"></i> What this exercise recorded</h2></div>
+      <div class="pg-card-body">
+        <div class="pg-table-wrap">
+          <table class="pg-table">
+            <thead><tr><th>Event</th><th>When</th></tr></thead>
+            <tbody>
+              {% for event in events %}
+                <tr><td>{{ event_badge(event.event_type) }}</td><td class="text-muted-2">{{ event.occurred_at|fmt_datetime }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="pg-note mt-2">
+          Recorded: campaign id, demo user reference, simulated message id, event type, timestamp.
+          Never recorded: passwords, one-time codes, tokens, payment data or any form input.
+        </div>
+      </div>
+    </div>
+
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-mortarboard"></i> Next steps</h2></div>
+      <div class="pg-card-body d-grid gap-2">
+        <a class="btn btn-primary btn-sm" href="{{ url_for('awareness.index') }}"><i class="bi bi-book"></i> Open awareness training</a>
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('awareness.quiz') }}"><i class="bi bi-patch-question"></i> Take the 10-question assessment</a>
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('simulator.inbox') }}"><i class="bi bi-arrow-left"></i> Back to the simulation inbox</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

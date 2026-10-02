@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% import 'detectors/_result_common.html' as panels %}
+{% from 'partials/macros.html' import risk_badge, empty_state %}
+{% from 'partials/detection_trace.html' import detection_trace %}
+{% block title %}Email analysis result{% endblock %}
+{% block page_title %}Email analysis result{% endblock %}
+{% block page_subtitle %}Analysis #{{ record.id }} · {{ result.sender or 'unknown sender' }}{% endblock %}
+
+{% block content %}
+<div class="pg-card">
+  <div class="pg-card-body tight d-flex flex-wrap gap-2 align-items-center">
+    <div style="flex:1 1 320px">
+      <div style="font-size:.9rem;font-weight:600">{{ result.subject or '(no subject)' }}</div>
+      <div class="text-dim mono" style="font-size:.76rem">from {{ result.sender or 'unknown' }}</div>
+    </div>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('email_detector.detector') }}"><i class="bi bi-arrow-repeat"></i> Analyse another</a>
+    {% if current_user.can('report.create') %}
+      <form method="post" action="{{ url_for('reports.generate_detection_report', kind='email', analysis_id=record.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-file-earmark-bar-graph"></i> Generate report</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+{{ panels.verdict_panel(risk) }}
+
+<div class="row g-3">
+  <div class="col-xl-7">
+    {{ panels.indicators_panel(result.indicators, 'chartIndicators') }}
+  </div>
+  <div class="col-xl-5">
+    <div class="pg-card">
+      <div class="pg-card-header">
+        <h2><i class="bi bi-shield-check"></i> Authentication results</h2>
+        <span class="pg-hint">{% if result.header_findings.provided %}from supplied headers{% else %}headers not supplied{% endif %}</span>
+      </div>
+      <div class="pg-card-body">
+        {% set h = result.header_findings %}
+        <div class="d-flex gap-2 flex-wrap mb-3">
+          {% for mech in ['spf', 'dkim', 'dmarc'] %}
+            {% set verdict = h[mech] %}
+            <span class="pg-badge pg-badge-{{ 'low' if verdict == 'pass' else ('neutral' if verdict == 'not provided' else 'critical') }}">
+              {{ mech|upper }}: {{ verdict }}
+            </span>
+          {% endfor %}
+        </div>
+        <dl class="pg-kv">
+          <dt>Reply-To</dt><dd class="mono" style="font-size:.78rem">{{ h.reply_to or '—' }}</dd>
+          <dt>Return-Path</dt><dd class="mono" style="font-size:.78rem">{{ h.return_path or '—' }}</dd>
+          <dt>Received hops</dt><dd>{{ h.received_count }}</dd>
+          <dt>X-Mailer</dt><dd class="mono" style="font-size:.78rem">{{ h.x_mailer or '—' }}</dd>
+        </dl>
+        <div class="pg-note mt-2">
+          Authentication proves the sending domain, not the sender's intent: mail from a
+          compromised but legitimate mailbox passes SPF, DKIM and DMARC.
+        </div>
+      </div>
+    </div>
+
+    {{ panels.ml_panel(ml) }}
+  </div>
+</div>
+
+<div class="pg-card">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-link-45deg"></i> Embedded links ({{ result.urls|length }})</h2>
+    <span class="pg-hint">Each link is scored by the URL analyser</span>
+  </div>
+  <div class="pg-table-wrap">
+    <table class="pg-table">
+      <thead><tr><th>URL</th><th>Host</th><th>Rule score</th><th>Top indicators</th><th></th></tr></thead>
+      <tbody>
+        {% for link in result.urls %}
+          <tr>
+            <td class="mono" style="font-size:.75rem">{{ link.url[:58] }}{% if link.url|length > 58 %}…{% endif %}</td>
+            <td class="mono" style="font-size:.75rem">{{ link.hostname }}</td>
+            <td><span class="pg-badge pg-badge-{{ 'critical' if link.heuristic_score >= 75 else ('high' if link.heuristic_score >= 50 else ('medium' if link.heuristic_score >= 25 else 'low')) }}">{{ link.heuristic_score }}</span></td>
+            <td class="text-muted-2" style="font-size:.78rem">{{ link.top_indicators|map(attribute='title')|join('; ') or '—' }}</td>
+            <td class="text-end"><a class="btn btn-ghost btn-sm" href="{{ url_for('url_detector.detector', url=link.url) }}">Analyse</a></td>
+          </tr>
+        {% else %}
+          <tr><td colspan="5">{{ empty_state('bi-link', 'No URLs were found in this message.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{{ panels.explanation_panel(risk) }}
+
+{% if trace %}{{ detection_trace(trace, open_stage='layer_body') }}{% endif %}
+
+<div class="pg-note">{{ result.disclaimer }}</div>
+
+<script id="detector-data" type="application/json">{{ {
+  'indicators': {
+    'labels': result.indicators|selectattr('points','gt',0)|map(attribute='title')|list,
+    'values': result.indicators|selectattr('points','gt',0)|map(attribute='points')|list,
+    'colors': result.indicators|selectattr('points','gt',0)|map(attribute='severity')|map('severity_color')|list
+  },
+  'attribution': {
+    'labels': (ml.explanation|map(attribute='feature')|list) if ml.available else [],
+    'values': (ml.explanation|map(attribute='contribution')|list) if ml.available else []
+  }
+}|tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/chartjs/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/detector.js') }}"></script>
+{% endblock %}

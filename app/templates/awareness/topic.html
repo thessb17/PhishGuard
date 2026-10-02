@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}{{ topic.title }}{% endblock %}
+{% block page_title %}{{ topic.title }}{% endblock %}
+{% block page_subtitle %}{{ topic.summary }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-xl-8">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi {{ topic.icon }}"></i> {{ topic.title }}</h2></div>
+      <div class="pg-card-body">
+        {% for section in topic.sections %}
+          <h3 style="font-size:.98rem;font-weight:600;margin-bottom:.45rem">{{ section.heading }}</h3>
+          <p class="text-muted-2" style="font-size:.9rem;line-height:1.7">{{ section.body }}</p>
+          {% if not loop.last %}<div class="pg-divider"></div>{% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-check2-square"></i> Practical takeaways</h2></div>
+      <div class="pg-card-body">
+        <ul class="pg-feature-list mb-0">
+          {% for tip in topic.tips %}<li><i class="bi bi-check2-circle"></i><span>{{ tip }}</span></li>{% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between gap-2">
+      {% if previous_topic %}
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('awareness.topic', slug=previous_topic.slug) }}"><i class="bi bi-arrow-left"></i> {{ previous_topic.title }}</a>
+      {% else %}<span></span>{% endif %}
+      {% if next_topic %}
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('awareness.topic', slug=next_topic.slug) }}">{{ next_topic.title }} <i class="bi bi-arrow-right"></i></a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-list-ul"></i> All modules</h2></div>
+      <div class="pg-card-body tight">
+        {% for item in topics %}
+          <a class="pg-nav-link {% if item.slug == topic.slug %}active{% endif %}" href="{{ url_for('awareness.topic', slug=item.slug) }}">
+            <i class="bi {{ item.icon }}"></i> {{ item.title }}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="pg-card">
+      <div class="pg-card-body">
+        <a class="btn btn-primary w-100" href="{{ url_for('awareness.quiz') }}"><i class="bi bi-patch-question"></i> Test yourself</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+From: "Accounts Payable" <ap-invoices@examplecorp-billing.example>
+Reply-To: finance-recovery@mail-drop.example
+Authentication-Results: mx.example-corp.com; spf=softfail; dkim=none; dmarc=fail
+Subject: Re: Outstanding invoice 88213 - immediate payment required today
+
+Hello,
+
+Our records show invoice 88213 is overdue. Please process the wire transfer to
+our updated bank details today and keep this confidential until the audit
+closes. Do not discuss this with other departments.
+
+Updated remittance portal: http://examplecorp-billing.example/pay/88213
+
+Regards,
+Accounts Payable

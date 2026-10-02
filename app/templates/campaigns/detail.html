@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import risk_badge, empty_state, event_badge %}
+{% block title %}{{ campaign.name }}{% endblock %}
+{% block page_title %}{{ campaign.name }}{% endblock %}
+{% block page_subtitle %}{{ template.name if template else campaign.template_key }} · {{ campaign.organization }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <span class="pg-badge pg-badge-{{ campaign.status_badge }}">{{ campaign.status }}</span>
+  <span class="pg-badge pg-badge-neutral">{{ campaign.difficulty }}</span>
+  {{ risk_badge(stats.risk_level) }}
+  <span class="pg-badge pg-badge-info">Awareness {{ stats.awareness_score }}/100</span>
+  <div class="ms-auto d-flex gap-2">
+    {% if current_user.can('report.create') %}
+      <form method="post" action="{{ url_for('reports.generate_campaign_report', campaign_id=campaign.id) }}">
+        {{ action_form.hidden_tag() }}
+        <button class="btn btn-ghost btn-sm" type="submit"><i class="bi bi-file-earmark-bar-graph"></i> Generate report</button>
+      </form>
+    {% endif %}
+    {% if current_user.can('campaign.edit') %}
+      <form method="post" action="{{ url_for('campaigns.change_status', campaign_id=campaign.id) }}" class="d-flex gap-2">
+        {{ action_form.hidden_tag() }}
+        <select name="status" class="form-select form-select-sm" style="width:auto">
+          {% for status in statuses %}
+            <option value="{{ status }}" {% if status == campaign.status %}selected{% endif %}>{{ status|title }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-ghost btn-sm" type="submit"><i class="bi bi-arrow-repeat"></i> Update</button>
+      </form>
+    {% endif %}
+    {% if current_user.can('campaign.delete') %}
+      <form method="post" action="{{ url_for('campaigns.delete', campaign_id=campaign.id) }}"
+            data-confirm="Delete this campaign and all of its simulation events?">
+        {{ action_form.hidden_tag() }}
+        <button class="btn btn-ghost btn-sm text-danger" type="submit"><i class="bi bi-trash"></i></button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="pg-kpi-grid">
+  <div class="pg-kpi"><div class="pg-kpi-label"><i class="bi bi-people"></i>Participants</div><div class="pg-kpi-value">{{ stats.participants }}</div><div class="pg-kpi-foot">{{ stats.messages_simulated }} simulated messages</div></div>
+  <div class="pg-kpi"><div class="pg-kpi-label"><i class="bi bi-envelope-open"></i>Open rate</div><div class="pg-kpi-value">{{ stats.open_rate }}<small>%</small></div><div class="pg-kpi-foot">{{ stats.unique_counts.OPENED }} unique users</div></div>
+  <div class="pg-kpi is-danger"><div class="pg-kpi-label"><i class="bi bi-cursor"></i>Interaction rate</div><div class="pg-kpi-value">{{ stats.interaction_rate }}<small>%</small></div><div class="pg-kpi-foot">{{ stats.unique_counts.LINK_CLICKED }} clicked the link</div></div>
+  <div class="pg-kpi is-success"><div class="pg-kpi-label"><i class="bi bi-flag"></i>Report rate</div><div class="pg-kpi-value">{{ stats.report_rate }}<small>%</small></div><div class="pg-kpi-foot">{{ stats.unique_counts.REPORTED }} reported it</div></div>
+  <div class="pg-kpi is-warning"><div class="pg-kpi-label"><i class="bi bi-mortarboard"></i>Training viewed</div><div class="pg-kpi-value">{{ stats.training_rate }}<small>%</small></div><div class="pg-kpi-foot">{{ stats.unique_counts.TRAINING_PAGE_VIEWED }} reached the lesson</div></div>
+  <div class="pg-kpi"><div class="pg-kpi-label"><i class="bi bi-activity"></i>Total events</div><div class="pg-kpi-value">{{ stats.events_total }}</div><div class="pg-kpi-foot">Safe metadata only</div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-xl-5">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-funnel"></i> Interaction funnel</h2></div>
+      <div class="pg-card-body"><div class="pg-chart sm"><canvas id="chartFunnel"></canvas></div></div>
+    </div>
+  </div>
+  <div class="col-xl-7">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-calendar3"></i> Event timeline</h2></div>
+      <div class="pg-card-body">
+        {% if stats.timeline %}
+          <div class="pg-chart sm"><canvas id="chartTimeline"></canvas></div>
+        {% else %}
+          {{ empty_state('bi-calendar', 'No events recorded yet for this campaign.') }}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pg-card">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-people"></i> Participant breakdown</h2>
+    <span class="pg-hint">Demo identities only</span>
+  </div>
+  <div class="pg-table-wrap">
+    <table class="pg-table">
+      <thead><tr><th>Demo user</th><th>Department</th><th>Message id</th><th>Opened</th><th>Clicked</th><th>Trained</th><th>Reported</th><th>Awareness</th></tr></thead>
+      <tbody>
+        {% for row in stats.participant_rows %}
+          <tr>
+            <td>{{ row.full_name or row.username }}<div class="text-dim mono" style="font-size:.72rem">{{ row.demo_user_ref }}</div></td>
+            <td class="text-muted-2">{{ row.department }}</td>
+            <td class="mono" style="font-size:.76rem">{{ row.simulated_message_id }}</td>
+            <td>{% if row.opened %}<i class="bi bi-check-circle text-info"></i>{% else %}<span class="text-dim">—</span>{% endif %}</td>
+            <td>{% if row.clicked %}<i class="bi bi-exclamation-triangle" style="color:var(--pg-critical)"></i>{% else %}<span class="text-dim">—</span>{% endif %}</td>
+            <td>{% if row.trained %}<i class="bi bi-mortarboard" style="color:var(--pg-medium)"></i>{% else %}<span class="text-dim">—</span>{% endif %}</td>
+            <td>{% if row.reported %}<i class="bi bi-flag-fill" style="color:var(--pg-low)"></i>{% else %}<span class="text-dim">—</span>{% endif %}</td>
+            <td><span class="pg-badge pg-badge-{{ 'low' if row.awareness_score >= 70 else ('medium' if row.awareness_score >= 50 else 'high') }}">{{ row.awareness_score }}</span></td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8">{{ empty_state('bi-people', 'No participants enrolled.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if template %}
+<div class="pg-card">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-envelope-paper"></i> Template used</h2>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('simulator.preview', template_key=template.key) }}"><i class="bi bi-eye"></i> Preview message</a>
+  </div>
+  <div class="pg-card-body">
+    <dl class="pg-kv">
+      <dt>Name</dt><dd>{{ template.name }}</dd>
+      <dt>Category</dt><dd>{{ template.category }}</dd>
+      <dt>Simulated sender</dt><dd class="mono">{{ template.from_name }} &lt;{{ template.from_address }}&gt;</dd>
+      <dt>Subject</dt><dd>{{ template.subject }}</dd>
+      <dt>Red flags taught</dt><dd>{{ template.indicators|length }}</dd>
+    </dl>
+  </div>
+</div>
+{% endif %}
+
+<div class="pg-note">{{ stats.metric_note }}</div>
+
+<script id="campaign-data" type="application/json">{{ {
+  'funnel': [stats.participants, stats.unique_counts.OPENED, stats.unique_counts.LINK_CLICKED,
+             stats.unique_counts.TRAINING_PAGE_VIEWED, stats.unique_counts.REPORTED],
+  'timeline': {
+    'labels': stats.timeline|map(attribute='date')|list,
+    'opened': stats.timeline|map(attribute='OPENED')|list,
+    'clicked': stats.timeline|map(attribute='LINK_CLICKED')|list,
+    'reported': stats.timeline|map(attribute='REPORTED')|list
+  }
+}|tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/chartjs/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/campaign.js') }}"></script>
+{% endblock %}

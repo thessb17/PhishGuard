@@ -1,0 +1,81 @@
+# ---------------------------------------------------------------------------
+# PhishGuard - files that must never enter version control.
+#
+# Rule of thumb: anything the application *generates* at runtime, and anything
+# that holds a secret. The trained model and the built dataset ARE committed
+# deliberately, so the project runs offline straight after a clone.
+# ---------------------------------------------------------------------------
+
+# --- Python ----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+.Python
+
+# --- Virtual environments ---------------------------------------------------
+venv/
+.venv/
+env/
+ENV/
+
+# --- Secrets and credentials ------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.json
+.netrc
+
+# --- Runtime instance data (databases, logs, uploads) -----------------------
+instance/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.log
+logs/
+
+# --- Test, coverage and profiling artifacts ---------------------------------
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+*.prof
+
+# --- Generated reports and exports ------------------------------------------
+*.pdf.tmp
+exports/
+reports_output/
+
+# --- Dataset cache ----------------------------------------------------------
+# The built CSV (data/datasets/url_dataset.csv) and the trained model
+# (app/ml/model.joblib, app/ml/metrics.json) ARE committed on purpose.
+# Only the large raw archives are ignored.
+data/datasets/.cache/
+*.zip
+*.tar.gz
+
+# --- Editors / OS -----------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini

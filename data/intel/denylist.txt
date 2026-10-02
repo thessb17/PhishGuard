@@ -1,0 +1,8 @@
+# PhishGuard local denylist - KNOWN_SUSPICIOUS registrable domains.
+# One domain per line. Populated by the operator from their own incident
+# history; PhishGuard ships only fictional examples so the demo can show the
+# mechanism without shipping a stale or inaccurate blocklist.
+#
+# NOTE: this is deliberately NOT a live threat feed. See docs/LIMITATIONS.md.
+phish-demo-known-bad.example
+credential-harvest-demo.example

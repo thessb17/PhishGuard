@@ -1,0 +1,115 @@
+{% from 'partials/macros.html' import risk_badge, meter, score_row, indicator_card %}
+
+{% macro verdict_panel(risk, title='Hybrid risk verdict') %}
+<div class="pg-card">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-speedometer2"></i> {{ title }}</h2>
+    <span class="pg-hint">heuristics x {{ risk.weights.heuristic }} + ML x {{ risk.weights.ml }}</span>
+  </div>
+  <div class="pg-card-body">
+    <div class="pg-risk-panel">
+      <div class="pg-gauge">
+        <div class="pg-gauge-value">{{ '%.0f'|format(risk.final_score) }}<small>/100</small></div>
+        <div class="pg-gauge-label">{{ risk_badge(risk.classification) }}</div>
+      </div>
+      <div>
+        {{ score_row('Rule-based score', risk.heuristic_score, risk.classification, 'Explainable indicators') }}
+        {{ score_row('ML score', risk.ml_score, risk.classification, 'Probability of the phishing class') }}
+        {{ score_row('Final score', risk.final_score, risk.classification, 'Weighted fusion of both') }}
+        <div class="text-muted-2 mt-2" style="font-size:.82rem">
+          <strong>Recommended action:</strong> {{ risk.recommendation }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro explanation_panel(risk) %}
+<div class="pg-card">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-question-circle"></i> Why was this classified this way?</h2>
+    <span class="pg-hint">Step-by-step score derivation</span>
+  </div>
+  <div class="pg-table-wrap">
+    <table class="pg-table">
+      <thead><tr><th style="width:170px">Step</th><th>How the score was produced</th><th style="width:110px">Value</th></tr></thead>
+      <tbody>
+        {% for step in risk.explanation %}
+          <tr>
+            <td><strong>{{ step.step }}</strong></td>
+            <td class="text-muted-2">{{ step.detail }}</td>
+            <td class="mono">{{ step.value }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if risk.notes %}
+    <div class="pg-card-body tight">
+      {% for note in risk.notes %}<div class="pg-note mb-1">{{ note }}</div>{% endfor %}
+    </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro indicators_panel(indicators, chart_id=None) %}
+<div class="pg-card">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-list-check"></i> Detection indicators</h2>
+    <span class="pg-hint">{{ indicators|selectattr('points', 'gt', 0)|list|length }} risk signal(s)</span>
+  </div>
+  <div class="pg-card-body">
+    {% if chart_id %}<div class="pg-chart" style="height:{{ 60 + 26 * (indicators|selectattr('points','gt',0)|list|length) }}px;max-height:420px"><canvas id="{{ chart_id }}"></canvas></div><div class="pg-divider"></div>{% endif %}
+    {% for indicator in indicators %}
+      {{ indicator_card(indicator) }}
+    {% else %}
+      <div class="pg-empty"><i class="bi bi-shield-check"></i><div>No rule-based risk indicators were triggered.</div></div>
+    {% endfor %}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro ml_panel(ml) %}
+<div class="pg-card">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-cpu"></i> Machine-learning prediction</h2>
+    <span class="pg-hint">{% if ml.available %}{{ ml.model }}{% else %}unavailable{% endif %}</span>
+  </div>
+  <div class="pg-card-body">
+    {% if ml.available %}
+      <dl class="pg-kv mb-3">
+        <dt>Classification</dt><dd><span class="pg-badge pg-badge-{{ 'critical' if ml.classification == 'PHISHING' else 'low' }}">{{ ml.classification }}</span></dd>
+        <dt>Phishing probability</dt><dd>{{ '%.2f'|format(ml.risk_score) }} / 100</dd>
+        <dt>Model confidence</dt><dd>{{ '%.1f'|format(ml.confidence * 100) }}% <span class="text-dim">(not a guarantee of correctness)</span></dd>
+        <dt>Model</dt><dd>{{ ml.model }} · trained {{ ml.trained_at }}</dd>
+      </dl>
+      {% if ml.explanation %}
+        <div class="form-label">Approximate feature attribution</div>
+        <div class="pg-chart sm"><canvas id="chartAttribution"></canvas></div>
+        <div class="pg-table-wrap mt-2">
+          <table class="pg-table">
+            <thead><tr><th>Feature</th><th>Value</th><th>z-score</th><th>Pushes towards</th></tr></thead>
+            <tbody>
+              {% for row in ml.explanation %}
+                <tr>
+                  <td class="mono" style="font-size:.78rem">{{ row.feature }}</td>
+                  <td>{{ row.value }}</td>
+                  <td>{{ row.z_score }}</td>
+                  <td><span class="pg-badge pg-badge-{{ 'critical' if row.pushes == 'phishing' else 'low' }}">{{ row.pushes }}</span></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+      <div class="pg-note mt-2">{{ ml.disclaimer }}</div>
+    {% else %}
+      <div class="pg-empty"><i class="bi bi-cpu"></i>
+        <div>ML prediction unavailable.</div>
+        <div class="text-dim mt-1" style="font-size:.8rem">{{ ml.reason or 'Train the model with: python -m app.ml.train' }}</div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endmacro %}

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import empty_state, pagination_nav %}
+{% block title %}Audit logs{% endblock %}
+{% block page_title %}Audit logs{% endblock %}
+{% block page_subtitle %}Append-only record of authentication, campaign, analysis and administrative activity{% endblock %}
+
+{% block content %}
+<div class="pg-card">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-journal-text"></i> Filters</h2>
+    <span class="pg-hint">{{ pagination.total }} entries</span>
+  </div>
+  <div class="pg-card-body">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label">Action</label>
+        <select name="action" class="form-select form-select-sm">
+          <option value="">All actions</option>
+          {% for item in actions %}<option value="{{ item }}" {% if item == selected_action %}selected{% endif %}>{{ item }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Category</label>
+        <select name="category" class="form-select form-select-sm">
+          <option value="">All</option>
+          {% for item in categories %}<option value="{{ item }}" {% if item == selected_category %}selected{% endif %}>{{ item }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Status</label>
+        <select name="status" class="form-select form-select-sm">
+          <option value="">All</option>
+          {% for item in ['SUCCESS', 'FAILURE', 'WARNING'] %}
+            <option value="{{ item }}" {% if item == selected_status %}selected{% endif %}>{{ item }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Search actor or description</label>
+        <input type="search" name="q" value="{{ search }}" class="form-control form-control-sm" placeholder="analyst, campaign…" maxlength="64">
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-funnel"></i> Apply</button>
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('admin.audit_logs') }}">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="pg-card">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-list-ul"></i> Entries</h2>
+    <input class="form-control form-control-sm" style="max-width:220px" type="search"
+           placeholder="Filter this page…" data-filter-table="#auditTable">
+  </div>
+  <div class="pg-table-wrap">
+    <table class="pg-table" id="auditTable">
+      <thead>
+        <tr><th>Time</th><th>Actor</th><th>Action</th><th>Category</th><th>Status</th><th>Description</th><th>Target</th><th>Source IP</th></tr>
+      </thead>
+      <tbody>
+        {% for entry in pagination.items %}
+          <tr>
+            <td class="text-muted-2 mono" style="font-size:.74rem">{{ entry.created_at|fmt_datetime }}</td>
+            <td>{{ entry.actor_username or 'system' }}</td>
+            <td><span class="pg-badge pg-badge-info">{{ entry.action }}</span></td>
+            <td class="text-muted-2">{{ entry.category }}</td>
+            <td>
+              <span class="pg-badge pg-badge-{{ 'success' if entry.status == 'SUCCESS' else ('warning' if entry.status == 'WARNING' else 'danger') }}">{{ entry.status }}</span>
+            </td>
+            <td class="text-muted-2" style="font-size:.8rem">{{ entry.description }}</td>
+            <td class="text-dim mono" style="font-size:.74rem">{% if entry.target_type %}{{ entry.target_type }}#{{ entry.target_id }}{% else %}—{% endif %}</td>
+            <td class="text-dim mono" style="font-size:.74rem">{{ entry.ip_address or 'not recorded' }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8">{{ empty_state('bi-journal', 'No audit entries match these filters.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="pg-card-body tight">
+    {{ pagination_nav(pagination, 'admin.audit_logs', {'action': selected_action, 'category': selected_category, 'status': selected_status, 'q': search}) }}
+  </div>
+</div>
+
+<div class="pg-note">
+  Audit entries never contain passwords, API keys, session identifiers or submitted message bodies —
+  only the action, the actor, the outcome and a short description. IP capture is controlled by the
+  <code>AUDIT_LOG_IP</code> setting.
+</div>
+{% endblock %}

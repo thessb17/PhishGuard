@@ -1,0 +1,22 @@
+# TLDs disproportionately represented in abuse reporting, used as a WEAK
+# signal only. A suspicious TLD alone never classifies a URL as malicious.
+tk
+ml
+ga
+cf
+gq
+top
+xyz
+work
+click
+link
+zip
+mov
+country
+stream
+download
+racing
+review
+party
+science
+gdn

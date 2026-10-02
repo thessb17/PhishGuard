@@ -1,0 +1,76 @@
+# ---------------------------------------------------------------------------
+# PhishGuard - one-command demo stack.
+#
+#   cp .env.example .env     # then fill in SECRET_KEY and POSTGRES_PASSWORD
+#   docker compose up --build
+#   open http://localhost:8000/
+#
+# No secret is hardcoded in this file. Compose reads ".env" from the project
+# root automatically, and every value below is a required variable with no
+# fallback - if it is missing, Compose stops with an error rather than
+# silently booting the stack with a known-public password.
+#
+# Generate the two required values with:
+#   python -c "import secrets; print('SECRET_KEY=' + secrets.token_urlsafe(48))"
+#   python -c "import secrets; print('POSTGRES_PASSWORD=' + secrets.token_urlsafe(24))"
+#
+# Accounts created by the seeder are the fictional demo users documented in
+# README.md.
+# ---------------------------------------------------------------------------
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: phishguard-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env - see .env.example}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in .env}
+    volumes:
+      - phishguard-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: phishguard-redis
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  web:
+    build: .
+    container_name: phishguard-web
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      FLASK_CONFIG: production
+      # Required. Production config refuses to start without a real value.
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env - see .env.example}
+      # Composed from the same variables the db service uses, so the password
+      # exists in exactly one place: your .env file.
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      RATELIMIT_STORAGE_URI: redis://redis:6379/0
+      SESSION_COOKIE_SECURE: "0"        # no TLS in front of the demo stack
+      ENABLE_HSTS: "0"
+      SEED_DEMO_DATA: "1"
+      LOG_LEVEL: INFO
+    ports:
+      - "8000:8000"
+    volumes:
+      - phishguard-instance:/app/instance
+    restart: unless-stopped
+
+volumes:
+  phishguard-db-data:
+  phishguard-instance:

@@ -1,0 +1,43 @@
+{
+  "_comment": [
+    "Brand dictionary used for impersonation detection. Each entry maps a brand",
+    "label to the domains that legitimately belong to it.",
+    "",
+    "'label' is what a typo-squatter imitates (e.g. 'paypal' in 'paypa1.example').",
+    "'domains' are the genuine registrable domains - a URL whose label matches the",
+    "brand but whose domain is NOT in this list is the impersonation signal.",
+    "",
+    "Fictional demo brands come first. The public brands that follow are included",
+    "only because they are the ones actually imitated in real phishing, and the",
+    "detector is useless without them. No brand is endorsed or affiliated."
+  ],
+  "brands": [
+    {"label": "cybersafe",  "domains": ["cybersafe.edu"],            "category": "demo"},
+    {"label": "examplecorp","domains": ["example-corp.com"],         "category": "demo"},
+    {"label": "paypal",     "domains": ["paypal.com"],               "category": "finance"},
+    {"label": "microsoft",  "domains": ["microsoft.com", "live.com", "outlook.com"], "category": "tech"},
+    {"label": "office365",  "domains": ["office.com", "office365.com"], "category": "tech"},
+    {"label": "google",     "domains": ["google.com", "gmail.com"],  "category": "tech"},
+    {"label": "apple",      "domains": ["apple.com", "icloud.com"],  "category": "tech"},
+    {"label": "amazon",     "domains": ["amazon.com", "amazon.in", "amazon.co.uk"], "category": "retail"},
+    {"label": "netflix",    "domains": ["netflix.com"],              "category": "media"},
+    {"label": "facebook",   "domains": ["facebook.com"],             "category": "social"},
+    {"label": "instagram",  "domains": ["instagram.com"],            "category": "social"},
+    {"label": "linkedin",   "domains": ["linkedin.com"],             "category": "social"},
+    {"label": "whatsapp",   "domains": ["whatsapp.com"],             "category": "social"},
+    {"label": "dropbox",    "domains": ["dropbox.com"],              "category": "tech"},
+    {"label": "docusign",   "domains": ["docusign.com"],             "category": "business"},
+    {"label": "adobe",      "domains": ["adobe.com"],                "category": "tech"},
+    {"label": "dhl",        "domains": ["dhl.com"],                  "category": "logistics"},
+    {"label": "fedex",      "domains": ["fedex.com"],                "category": "logistics"},
+    {"label": "ups",        "domains": ["ups.com"],                  "category": "logistics"},
+    {"label": "hsbc",       "domains": ["hsbc.com", "hsbc.co.uk"],   "category": "finance"},
+    {"label": "chase",      "domains": ["chase.com"],                "category": "finance"},
+    {"label": "wellsfargo", "domains": ["wellsfargo.com"],           "category": "finance"},
+    {"label": "coinbase",   "domains": ["coinbase.com"],             "category": "crypto"},
+    {"label": "binance",    "domains": ["binance.com"],              "category": "crypto"},
+    {"label": "metamask",   "domains": ["metamask.io"],              "category": "crypto"},
+    {"label": "steam",      "domains": ["steampowered.com"],         "category": "gaming"},
+    {"label": "github",     "domains": ["github.com"],               "category": "tech"}
+  ]
+}

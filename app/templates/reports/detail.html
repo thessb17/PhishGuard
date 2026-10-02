@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import risk_badge, indicator_card %}
+{% block title %}{{ report.title }}{% endblock %}
+{% block page_title %}{{ report.title }}{% endblock %}
+{% block page_subtitle %}{{ report.type_label }} · generated {{ report.created_at|fmt_datetime }}{% endblock %}
+
+{% block content %}
+<div class="pg-card">
+  <div class="pg-card-body tight d-flex flex-wrap gap-2 align-items-center">
+    <div style="flex:1 1 320px" class="text-muted-2" style="font-size:.86rem">{{ report.summary }}</div>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('reports.download', report_id=report.id, fmt='csv') }}"><i class="bi bi-filetype-csv"></i> CSV</a>
+    {% if pdf_ok %}<a class="btn btn-primary btn-sm" href="{{ url_for('reports.download', report_id=report.id, fmt='pdf') }}"><i class="bi bi-filetype-pdf"></i> PDF</a>{% endif %}
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('reports.download', report_id=report.id, fmt='json') }}"><i class="bi bi-filetype-json"></i> JSON</a>
+  </div>
+</div>
+
+{% if payload.statistics %}
+  <div class="pg-kpi-grid">
+    {% for key, value in payload.statistics.items() %}
+      <div class="pg-kpi">
+        <div class="pg-kpi-label">{{ key.replace('_', ' ')|title }}</div>
+        <div class="pg-kpi-value" style="font-size:1.45rem">{{ value }}</div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% if payload.scores %}
+  <div class="pg-card">
+    <div class="pg-card-header"><h2><i class="bi bi-speedometer2"></i> Risk scoring</h2></div>
+    <div class="pg-card-body">
+      <dl class="pg-kv">
+        {% for key, value in payload.scores.items() %}
+          <dt>{{ key.replace('_', ' ')|title }}</dt>
+          <dd>{% if key == 'classification' %}{{ risk_badge(value) }}{% else %}{{ value if value is not none else '—' }}{% endif %}</dd>
+        {% endfor %}
+      </dl>
+    </div>
+  </div>
+{% endif %}
+
+{% if payload.subject %}
+  <div class="pg-card">
+    <div class="pg-card-header"><h2><i class="bi bi-file-text"></i> Analysed artefact</h2></div>
+    <div class="pg-card-body">
+      <dl class="pg-kv">
+        {% for key, value in payload.subject.items() %}
+          <dt>{{ key.replace('_', ' ')|title }}</dt>
+          <dd class="mono" style="font-size:.79rem">{{ value if value else '—' }}</dd>
+        {% endfor %}
+      </dl>
+    </div>
+  </div>
+{% endif %}
+
+{% if payload.participants %}
+  <div class="pg-card">
+    <div class="pg-card-header"><h2><i class="bi bi-people"></i> Participants</h2><span class="pg-hint">{{ payload.participants|length }} rows</span></div>
+    <div class="pg-table-wrap">
+      <table class="pg-table">
+        <thead><tr><th>Demo ref</th><th>Department</th><th>Opened</th><th>Clicked</th><th>Trained</th><th>Reported</th><th>Awareness</th></tr></thead>
+        <tbody>
+          {% for row in payload.participants %}
+            <tr>
+              <td class="mono" style="font-size:.76rem">{{ row.demo_user_ref }}</td>
+              <td class="text-muted-2">{{ row.department }}</td>
+              <td>{{ 'Yes' if row.opened else '—' }}</td>
+              <td>{{ 'Yes' if row.clicked else '—' }}</td>
+              <td>{{ 'Yes' if row.training_viewed else '—' }}</td>
+              <td>{{ 'Yes' if row.reported else '—' }}</td>
+              <td>{{ row.awareness_score }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}
+
+{% if payload.indicators %}
+  <div class="pg-card">
+    <div class="pg-card-header"><h2><i class="bi bi-list-check"></i> Indicators</h2></div>
+    <div class="pg-card-body">
+      {% for indicator in payload.indicators %}{{ indicator_card(indicator) }}{% endfor %}
+    </div>
+  </div>
+{% endif %}
+
+{% if payload.explanation %}
+  <div class="pg-card">
+    <div class="pg-card-header"><h2><i class="bi bi-question-circle"></i> Score explanation</h2></div>
+    <div class="pg-table-wrap">
+      <table class="pg-table">
+        <thead><tr><th>Step</th><th>Detail</th><th>Value</th></tr></thead>
+        <tbody>
+          {% for step in payload.explanation %}
+            <tr><td><strong>{{ step.step }}</strong></td><td class="text-muted-2">{{ step.detail }}</td><td class="mono">{{ step.value }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}
+
+{% if payload.recommendation %}
+  <div class="pg-card">
+    <div class="pg-card-header"><h2><i class="bi bi-clipboard-check"></i> Recommended action</h2></div>
+    <div class="pg-card-body"><p class="text-muted-2 mb-0" style="font-size:.88rem">{{ payload.recommendation }}</p></div>
+  </div>
+{% endif %}
+
+{% if payload.notes %}
+  <div class="pg-card">
+    <div class="pg-card-header"><h2><i class="bi bi-info-circle"></i> Notes and limitations</h2></div>
+    <div class="pg-card-body">
+      {% for note in payload.notes %}<div class="pg-note mb-2">{{ note }}</div>{% endfor %}
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

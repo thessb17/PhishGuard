@@ -1,0 +1,85 @@
+{% extends 'base_public.html' %}
+{% block title %}Sign in{% endblock %}
+{% block body %}
+<div class="pg-auth">
+  <aside class="pg-auth-aside">
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="" width="52" height="52">
+      <div>
+        <div style="font-size:1.6rem;font-weight:700;letter-spacing:.3px">{{ APP_NAME }}</div>
+        <div class="text-muted-2" style="font-size:.86rem">{{ APP_TAGLINE }}</div>
+      </div>
+    </div>
+    <div class="mb-3" style="font-size:.9rem"><strong>{{ PROJECT_OWNER }}</strong><br><span class="text-muted-2">{{ INSTITUTION }} · {{ DEPARTMENT }}</span></div>
+    <p class="text-muted-2" style="max-width:46ch">
+      A defensive security-awareness platform: run safe phishing simulations, analyse
+      suspicious emails and URLs with explainable scoring, and train people to spot
+      the real thing.
+    </p>
+    <ul class="pg-feature-list">
+      <li><i class="bi bi-shield-check"></i><span><strong>Safe by design.</strong> Simulations never collect passwords, tokens or payment data — the landing page has no input fields at all.</span></li>
+      <li><i class="bi bi-diagram-3"></i><span><strong>Hybrid detection.</strong> Rule-based indicators fused with a trained ML classifier, with every point of the score explained.</span></li>
+      <li><i class="bi bi-mortarboard"></i><span><strong>Awareness first.</strong> Twelve training modules and a ten-question assessment with per-answer feedback.</span></li>
+      <li><i class="bi bi-journal-text"></i><span><strong>Audited.</strong> Every login, analysis, campaign change and report is recorded — without sensitive content.</span></li>
+    </ul>
+  </aside>
+
+  <section class="pg-auth-panel">
+    <div class="pg-auth-card">
+      <div class="pg-card">
+        <div class="pg-card-header">
+          <h2><i class="bi bi-box-arrow-in-right"></i> Sign in</h2>
+        </div>
+        <div class="pg-card-body">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'danger' if category in ('error','danger') else category }} py-2">{{ message }}</div>
+            {% endfor %}
+          {% endwith %}
+
+          <form method="post" action="{{ url_for('auth.login') }}" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+              {{ form.username.label(class='form-label') }}
+              {{ form.username(class='form-control', autocomplete='username', autofocus=true, placeholder='admin') }}
+            </div>
+            <div class="mb-3">
+              {{ form.password.label(class='form-label') }}
+              {{ form.password(class='form-control', autocomplete='current-password', placeholder='••••••••••') }}
+            </div>
+            <div class="form-check mb-3">
+              {{ form.remember(class='form-check-input') }}
+              {{ form.remember.label(class='form-check-label') }}
+            </div>
+            {{ form.submit(class='btn btn-primary w-100') }}
+          </form>
+
+          {% if config.ALLOW_SELF_REGISTRATION %}
+            <div class="text-center mt-3" style="font-size:.84rem">
+              <span class="text-dim">Need a participant account?</span>
+              <a href="{{ url_for('auth.register') }}">Register as a demo user</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="pg-card">
+        <div class="pg-card-header"><h3><i class="bi bi-person-badge"></i> Demo credentials</h3></div>
+        <div class="pg-card-body tight">
+          <table class="pg-table">
+            <thead><tr><th>Role</th><th>Username</th><th>Password</th></tr></thead>
+            <tbody>
+              <tr><td><span class="pg-badge pg-badge-danger">Admin</span></td><td class="mono">admin</td><td class="mono">Admin@Phish2026</td></tr>
+              <tr><td><span class="pg-badge pg-badge-info">Analyst</span></td><td class="mono">analyst</td><td class="mono">Analyst@Phish2026</td></tr>
+              <tr><td><span class="pg-badge pg-badge-neutral">Demo user</span></td><td class="mono">priya.demo</td><td class="mono">Demo@Phish2026</td></tr>
+            </tbody>
+          </table>
+          <div class="pg-note mt-2">
+            Seeded, fictional accounts for local evaluation only. Change them before any shared deployment.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+# PhishGuard local allowlist - KNOWN_SAFE registrable domains.
+# One domain per line. Lines starting with '#' are comments.
+#
+# These are domains the operator has decided are trustworthy in THIS
+# deployment. Being on this list suppresses look-alike and reputation
+# penalties; it does NOT suppress structural indicators (an allowlisted
+# domain serving an IP-literal URL with credential keywords is still scored).
+#
+# Fictional organisation used throughout the demo:
+cybersafe.edu
+example-corp.com
+
+# Widely used public domains, included so the demo's benign samples do not
+# generate look-alike noise. Trim this list for a real deployment.
+github.com
+python.org
+wikipedia.org
+mozilla.org
+debian.org

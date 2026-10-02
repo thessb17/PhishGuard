@@ -1,0 +1,9 @@
+# Benign URLs used as the control group in demonstrations.
+https://library.cybersafe.edu/account/loans
+https://docs.python.org/3/library/json.html?highlight=dumps
+https://www.wikipedia.org/wiki/Phishing
+https://flask.palletsprojects.com/en/3.0.x/quickstart/
+https://scikit-learn.org/stable/modules/ensemble.html
+https://owasp.org/www-project-top-ten/
+https://portal.cybersafe.edu/password/renew
+https://hr.example-corp.com/policies/remote-working

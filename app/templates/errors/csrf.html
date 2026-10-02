@@ -1,0 +1,60 @@
+{# Extends base_public, NOT base: an anonymous visitor hitting a CSRF error
+   must not render the authenticated sidebar (current_user.can() is undefined
+   for AnonymousUserMixin, which would turn this error page into a 500). #}
+{% extends 'base_public.html' %}
+{% block title %}CSRF validation failed{% endblock %}
+
+{% block body %}
+<div class="d-flex align-items-center justify-content-center" style="min-height:100vh;padding:2rem">
+<div class="pg-card" style="max-width:720px;width:100%">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-shield-exclamation"></i> CSRF validation failed</h2>
+  </div>
+  <div class="pg-card-body">
+    <p>
+      PhishGuard rejected this request because it did not carry a valid
+      anti-forgery token. <strong>Nothing was changed.</strong> This protection
+      is what stops another website from submitting forms on your behalf.
+    </p>
+
+    <h3 class="h6 mt-3">Why this usually happens</h3>
+    <ul class="pg-feature-list">
+      <li>The page was open longer than the token lifetime and the token expired.</li>
+      <li>Your browser session expired or was cleared.</li>
+      <li>Your browser is blocking cookies for this site.</li>
+      <li>The page was restored from cache or the back button after signing out.</li>
+      <li>The application was restarted with a different secret key, invalidating old sessions.</li>
+      <li>
+        The app is embedded in a frame on another site, and your browser is
+        withholding the session cookie from that frame.
+      </li>
+    </ul>
+
+    <h3 class="h6 mt-3">What to do</h3>
+    <p class="pg-sub">
+      Reloading the page issues a fresh token, which resolves almost every case.
+    </p>
+
+    <div class="d-flex gap-2 flex-wrap mt-2">
+      <a class="btn btn-primary" href="{{ url_for('auth.login') }}">
+        <i class="bi bi-box-arrow-in-right"></i> Sign in again
+      </a>
+      <a class="btn btn-ghost" href="{{ request.referrer or url_for('dashboard.index') }}">
+        <i class="bi bi-arrow-clockwise"></i> Reload and retry
+      </a>
+      {% if reset_available %}
+        <a class="btn btn-ghost" href="{{ url_for('auth.session_reset') }}">
+          <i class="bi bi-eraser"></i> Clear local session (development)
+        </a>
+      {% endif %}
+    </div>
+
+    <div class="pg-note mt-3">
+      <i class="bi bi-info-circle"></i>
+      This page deliberately shows no token, session contents, or technical
+      detail — publishing them would defeat the protection it reports.
+    </div>
+  </div>
+</div>
+</div>
+{% endblock %}

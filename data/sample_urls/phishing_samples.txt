@@ -1,0 +1,12 @@
+# Fictional / reserved-domain URLs used to demonstrate the URL detector.
+# None of these are live sites. Lines starting with '#' are comments.
+http://198.51.100.23/paypal.com/secure/login.php?cmd=verify-account
+https://cybersafe.edu.verify-student.example/finance/confirm?id=8812
+https://xn--pypal-4ve.com/signin
+http://micros0ft-secure-login.tk/account/unlock
+http://bit.ly/3xR4pQz
+http://secure-update-account.example/o365/verify?session=8f21ab99c4
+http://192.0.2.44:8080/login/verify/index.html
+https://appleid.apple.com.security-check.example/restore
+http://hr-policy-signoff.example/acknowledge?emp=4471
+https://dhl-tracking-redelivery.example/pay/fee?ref=GPX4471902

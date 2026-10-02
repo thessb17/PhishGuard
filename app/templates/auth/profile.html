@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import empty_state, event_badge %}
+{% block title %}My profile{% endblock %}
+{% block page_title %}My profile{% endblock %}
+{% block page_subtitle %}Account, credentials, API key and your own simulation history{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-xl-5">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-person-badge"></i> Account</h2></div>
+      <div class="pg-card-body">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="pg-avatar lg">{{ current_user.initials() }}</div>
+          <div>
+            <div style="font-weight:600">{{ current_user.full_name }}</div>
+            <div class="text-dim" style="font-size:.8rem">{{ current_user.email }}</div>
+            <span class="pg-badge pg-badge-info mt-1">{{ current_user.role_label }}</span>
+          </div>
+        </div>
+        <dl class="pg-kv">
+          <dt>Username</dt><dd class="mono">{{ current_user.username }}</dd>
+          <dt>Organization</dt><dd>{{ current_user.organization }}</dd>
+          <dt>Department</dt><dd>{{ current_user.department or '—' }}</dd>
+          <dt>Member since</dt><dd>{{ current_user.created_at|fmt_datetime }}</dd>
+          <dt>Last login</dt><dd>{{ current_user.last_login_at|fmt_datetime if current_user.last_login_at else 'first session' }}</dd>
+          <dt>Account state</dt>
+          <dd><span class="pg-badge pg-badge-{{ 'success' if current_user.is_active_account else 'danger' }}">{{ 'active' if current_user.is_active_account else 'disabled' }}</span></dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-key"></i> Change password</h2></div>
+      <div class="pg-card-body">
+        <form method="post" action="{{ url_for('auth.change_password') }}" novalidate>
+          {{ password_form.hidden_tag() }}
+          <div class="mb-2">
+            {{ password_form.current_password.label(class='form-label') }}
+            {{ password_form.current_password(class='form-control', autocomplete='current-password') }}
+          </div>
+          <div class="mb-2">
+            {{ password_form.new_password.label(class='form-label') }}
+            {{ password_form.new_password(class='form-control', autocomplete='new-password') }}
+            {% for error in password_form.new_password.errors %}<div class="text-danger" style="font-size:.78rem">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ password_form.confirm.label(class='form-label') }}
+            {{ password_form.confirm(class='form-control', autocomplete='new-password') }}
+            {% for error in password_form.confirm.errors %}<div class="text-danger" style="font-size:.78rem">{{ error }}</div>{% endfor %}
+          </div>
+          {{ password_form.submit(class='btn btn-primary btn-sm') }}
+        </form>
+        <div class="pg-note mt-3">
+          Passwords are stored only as salted PBKDF2-SHA256 hashes. Neither this page nor the audit
+          log ever records the value you type.
+        </div>
+      </div>
+    </div>
+
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-terminal"></i> API access key</h2></div>
+      <div class="pg-card-body">
+        {% if new_api_key %}
+          <div class="alert alert-success py-2 mb-3">
+            <div class="fw-semibold mb-1"><i class="bi bi-key"></i> Your new API key</div>
+            <div class="d-flex gap-2 align-items-center">
+              <code class="pg-code" style="flex:1">{{ new_api_key }}</code>
+              <button class="btn btn-ghost btn-sm" type="button" data-copy="{{ new_api_key }}" title="Copy"><i class="bi bi-clipboard"></i></button>
+            </div>
+            <div class="pg-note mt-2">
+              Copy it now. PhishGuard stores only a SHA-256 digest, so this value
+              cannot be displayed again — if you lose it, rotate to get a new one.
+            </div>
+          </div>
+        {% endif %}
+        <div class="d-flex gap-2 align-items-center mb-2">
+          {% if current_user.has_api_key %}
+            <code class="pg-code" style="flex:1">{{ current_user.api_key_display }}</code>
+            <span class="pg-badge pg-badge-success">active</span>
+          {% else %}
+            <code class="pg-code" style="flex:1">not generated</code>
+          {% endif %}
+        </div>
+        {% if current_user.api_key_issued_at %}
+          <div class="pg-sub mb-2">Issued {{ current_user.api_key_issued_at.strftime('%d %b %Y, %H:%M') }} UTC</div>
+        {% endif %}
+        <form method="post" action="{{ url_for('auth.rotate_api_key') }}" data-confirm="Rotating the key immediately invalidates the current one. Continue?">
+          {{ action_form.hidden_tag() }}
+          <button class="btn btn-ghost btn-sm" type="submit"><i class="bi bi-arrow-repeat"></i> {{ 'Rotate key' if current_user.has_api_key else 'Generate key' }}</button>
+        </form>
+        <div class="pg-note mt-3">
+          Send it as <code>X-API-Key</code> or <code>Authorization: Bearer &lt;key&gt;</code>. The key
+          grants exactly your own role's capabilities — see <code>docs/API.md</code>.
+          Only the first 8 characters are kept for identification; the key itself is
+          stored as a digest and is shown once, at the moment it is issued.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-7">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-shield-check"></i> Capabilities granted by your role</h2></div>
+      <div class="pg-card-body">
+        <div class="d-flex flex-wrap gap-2">
+          {% for capability in capabilities %}
+            <span class="pg-chip"><i class="bi bi-check2"></i> {{ capability }}</span>
+          {% endfor %}
+        </div>
+        <div class="pg-note mt-3">
+          Authorization is checked server-side on every request; hiding a link in the navigation is a
+          convenience, never the control itself.
+        </div>
+      </div>
+    </div>
+
+    <div class="pg-card">
+      <div class="pg-card-header">
+        <h2><i class="bi bi-patch-question"></i> Awareness assessment history</h2>
+        <span class="pg-hint">{% if best_score is not none %}best {{ best_score }}%{% else %}not attempted{% endif %}</span>
+      </div>
+      <div class="pg-table-wrap">
+        <table class="pg-table">
+          <thead><tr><th>Score</th><th>Correct</th><th>Result</th><th>Completed</th></tr></thead>
+          <tbody>
+            {% for attempt in attempts %}
+              <tr>
+                <td><strong>{{ attempt.score }}%</strong></td>
+                <td>{{ attempt.correct_count }}/{{ attempt.total_questions }}</td>
+                <td><span class="pg-badge pg-badge-{{ 'success' if attempt.passed else 'danger' }}">{{ 'PASS' if attempt.passed else 'FAIL' }}</span></td>
+                <td class="text-muted-2"><a href="{{ url_for('awareness.quiz_result', attempt_id=attempt.id) }}">{{ attempt.completed_at|fmt_datetime }}</a></td>
+              </tr>
+            {% else %}
+              <tr><td colspan="4">{{ empty_state('bi-journal', 'No assessment attempts yet.', 'Take the 10-question quiz from the training section.') }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="pg-card">
+      <div class="pg-card-header">
+        <h2><i class="bi bi-activity"></i> My simulation events</h2>
+        <span class="pg-hint">Only interaction metadata is recorded</span>
+      </div>
+      <div class="pg-table-wrap">
+        <table class="pg-table">
+          <thead><tr><th>Event</th><th>Campaign</th><th>When</th></tr></thead>
+          <tbody>
+            {% for event in events %}
+              <tr>
+                <td>{{ event_badge(event.event_type) }}</td>
+                <td class="text-muted-2">{{ event.campaign.name if event.campaign else '—' }}</td>
+                <td class="text-muted-2">{{ event.occurred_at|fmt_datetime }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="3">{{ empty_state('bi-inbox', 'No simulation events recorded for your account.') }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

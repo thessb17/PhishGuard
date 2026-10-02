@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import kpi, risk_badge, event_badge, empty_state %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Security Operations Dashboard{% endblock %}
+{% block page_subtitle %}Simulation, detection and awareness telemetry · {{ INSTITUTION }} · {{ PROJECT_OWNER }}{% endblock %}
+
+{% block content %}
+{% set k = stats.kpis %}
+
+<div class="pg-kpi-grid">
+  {{ kpi('Campaigns', k.total_campaigns, 'bi-megaphone', k.active_campaigns ~ ' active') }}
+  {{ kpi('Simulated messages', k.emails_simulated, 'bi-envelope-paper', k.total_simulations ~ ' enrolments') }}
+  {{ kpi('Simulation interactions', k.simulation_interactions, 'bi-cursor', k.link_clicks ~ ' link clicks', 'is-warning') }}
+  {{ kpi('Reports by users', k.reports_submitted, 'bi-flag', k.reported_users ~ ' distinct reporters', 'is-success') }}
+  {{ kpi('Detection rate', k.detection_rate ~ '%', 'bi-radar', 'HIGH/CRITICAL share of ' ~ k.total_analyses ~ ' analyses') }}
+  {{ kpi('High-risk events', k.high_risk_events, 'bi-exclamation-octagon', 'HIGH + CRITICAL verdicts', 'is-danger') }}
+  {{ kpi('Average risk score', k.avg_risk_score, 'bi-speedometer', 'Across all stored analyses') }}
+  {{ kpi('Users needing training', k.users_requiring_training, 'bi-mortarboard', 'Clicked, not yet trained', 'is-warning') }}
+</div>
+
+<div class="row g-3">
+  <div class="col-xl-8">
+    <div class="pg-card">
+      <div class="pg-card-header">
+        <h2><i class="bi bi-activity"></i> Phishing simulation activity</h2>
+        <span class="pg-hint">Last 14 days · simulation events only</span>
+      </div>
+      <div class="pg-card-body"><div class="pg-chart"><canvas id="chartActivity"></canvas></div></div>
+    </div>
+  </div>
+  <div class="col-xl-4">
+    <div class="pg-card">
+      <div class="pg-card-header">
+        <h2><i class="bi bi-pie-chart"></i> Risk distribution</h2>
+        <span class="pg-hint">Stored analyses</span>
+      </div>
+      <div class="pg-card-body"><div class="pg-chart"><canvas id="chartRisk"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-xl-6">
+    <div class="pg-card">
+      <div class="pg-card-header">
+        <h2><i class="bi bi-bar-chart"></i> Detection accuracy (model benchmark)</h2>
+        <span class="pg-hint">{% if accuracy.available %}Held-out test split{% else %}Model not trained{% endif %}</span>
+      </div>
+      <div class="pg-card-body">
+        {% if accuracy.available %}
+          <div class="pg-chart"><canvas id="chartAccuracy"></canvas></div>
+          <div class="pg-note mt-2">
+            Selected model: <strong>{{ accuracy.selected }}</strong>. Benchmarks come from the held-out
+            split of the bundled dataset and are optimistic relative to live traffic.
+          </div>
+        {% else %}
+          {{ empty_state('bi-cpu', 'No trained model found.', 'Run: python -m app.ml.train') }}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-6">
+    <div class="pg-card">
+      <div class="pg-card-header">
+        <h2><i class="bi bi-graph-up"></i> Campaign performance</h2>
+        <span class="pg-hint">Interaction vs reporting</span>
+      </div>
+      <div class="pg-card-body"><div class="pg-chart"><canvas id="chartCampaigns"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-xl-5">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-shuffle"></i> Email vs URL detections</h2></div>
+      <div class="pg-card-body"><div class="pg-chart sm"><canvas id="chartSplit"></canvas></div></div>
+    </div>
+  </div>
+  <div class="col-xl-7">
+    <div class="pg-card">
+      <div class="pg-card-header">
+        <h2><i class="bi bi-mortarboard"></i> Awareness improvement</h2>
+        <span class="pg-hint">Mean quiz score by week</span>
+      </div>
+      <div class="pg-card-body"><div class="pg-chart sm"><canvas id="chartAwareness"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-xl-6">
+    <div class="pg-card">
+      <div class="pg-card-header">
+        <h2><i class="bi bi-megaphone"></i> Recent campaigns</h2>
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('campaigns.list_campaigns') }}">View all</a>
+      </div>
+      <div class="pg-table-wrap">
+        <table class="pg-table">
+          <thead><tr><th>Campaign</th><th>Template</th><th>Status</th><th>Participants</th></tr></thead>
+          <tbody>
+            {% for campaign in recent_campaigns %}
+              <tr>
+                <td><a href="{{ url_for('campaigns.detail', campaign_id=campaign.id) }}">{{ campaign.name }}</a></td>
+                <td class="text-muted-2">{{ campaign.template_key.replace('_', ' ')|title }}</td>
+                <td><span class="pg-badge pg-badge-{{ campaign.status_badge }}">{{ campaign.status }}</span></td>
+                <td>{{ campaign.participant_count }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="4">{{ empty_state('bi-inbox', 'No campaigns yet.') }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-lightning"></i> Latest simulation events</h2></div>
+      <div class="pg-table-wrap">
+        <table class="pg-table">
+          <thead><tr><th>Event</th><th>Demo user</th><th>Message</th><th>When</th></tr></thead>
+          <tbody>
+            {% for event in recent_events %}
+              <tr>
+                <td>{{ event_badge(event.event_type) }}</td>
+                <td class="mono" style="font-size:.78rem">{{ event.demo_user_ref }}</td>
+                <td class="mono" style="font-size:.78rem">{{ event.simulated_message_id }}</td>
+                <td class="text-muted-2">{{ event.occurred_at|fmt_datetime }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="4">{{ empty_state('bi-activity', 'No simulation events recorded yet.') }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-xl-6">
+    <div class="pg-card">
+      <div class="pg-card-header">
+        <h2><i class="bi bi-link-45deg"></i> Recent URL analyses</h2>
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('url_detector.detector') }}">Analyse a URL</a>
+      </div>
+      <div class="pg-table-wrap">
+        <table class="pg-table">
+          <thead><tr><th>Host</th><th>Score</th><th>Verdict</th><th>When</th></tr></thead>
+          <tbody>
+            {% for row in recent_urls %}
+              <tr>
+                <td><a href="{{ url_for('url_detector.view_analysis', analysis_id=row.id) }}" class="mono" style="font-size:.78rem">{{ row.hostname or row.url[:34] }}</a></td>
+                <td>{{ '%.1f'|format(row.final_score) }}</td>
+                <td>{{ risk_badge(row.classification) }}</td>
+                <td class="text-muted-2">{{ row.created_at|fmt_datetime }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="4">{{ empty_state('bi-link', 'No URL analyses yet.') }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6">
+    <div class="pg-card">
+      <div class="pg-card-header">
+        <h2><i class="bi bi-envelope-exclamation"></i> Recent email analyses</h2>
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('email_detector.detector') }}">Analyse an email</a>
+      </div>
+      <div class="pg-table-wrap">
+        <table class="pg-table">
+          <thead><tr><th>Subject</th><th>Score</th><th>Verdict</th><th>When</th></tr></thead>
+          <tbody>
+            {% for row in recent_emails %}
+              <tr>
+                <td><a href="{{ url_for('email_detector.view_analysis', analysis_id=row.id) }}">{{ (row.subject or '(no subject)')[:38] }}</a></td>
+                <td>{{ '%.1f'|format(row.final_score) }}</td>
+                <td>{{ risk_badge(row.classification) }}</td>
+                <td class="text-muted-2">{{ row.created_at|fmt_datetime }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="4">{{ empty_state('bi-envelope', 'No email analyses yet.') }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if training_users %}
+<div class="pg-card">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-person-exclamation"></i> Users requiring follow-up training</h2>
+    <span class="pg-hint">Clicked a simulation link, no training or passing quiz yet</span>
+  </div>
+  <div class="pg-card-body tight">
+    <div class="pg-pill-row">
+      {% for user in training_users %}
+        <span class="pg-feature-chip"><i class="bi bi-person"></i> {{ user.full_name or user.username }} · {{ user.department }}</span>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if recent_audit %}
+<div class="pg-card">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-journal-text"></i> Recent audit events</h2>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('admin.audit_logs') }}">Open audit log</a>
+  </div>
+  <div class="pg-table-wrap">
+    <table class="pg-table">
+      <thead><tr><th>Action</th><th>Actor</th><th>Status</th><th>Description</th><th>When</th></tr></thead>
+      <tbody>
+        {% for entry in recent_audit %}
+          <tr>
+            <td class="mono" style="font-size:.76rem">{{ entry.action }}</td>
+            <td>{{ entry.actor_username }}</td>
+            <td><span class="pg-badge pg-badge-{{ entry.status_badge }}">{{ entry.status }}</span></td>
+            <td class="text-muted-2">{{ entry.description[:70] }}</td>
+            <td class="text-muted-2">{{ entry.created_at|fmt_datetime }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<div class="pg-note">{{ stats.metric_note }}</div>
+
+<script id="dashboard-data" type="application/json">{{ {'charts': stats.charts, 'accuracy': accuracy}|tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/chartjs/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1180" width="1000" height="1180" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7c8da6"/>
+    </marker>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7c8da6"/>
+    </marker>
+    <style>
+      .bg    { fill:#0f141d; }
+      .zone  { fill:#141b27; stroke:#2a3344; stroke-width:1.5; rx:12; }
+      .sec   { fill:none; stroke:#3d8b5f; stroke-width:2; stroke-dasharray:7 5; rx:14; }
+      .box   { fill:#1b2232; stroke:#2f3a4d; stroke-width:1.2; rx:9; }
+      .boxa  { fill:#1d2a3d; stroke:#3f6ea8; stroke-width:1.4; rx:9; }
+      .boxm  { fill:#2a2033; stroke:#7a4fa0; stroke-width:1.4; rx:9; }
+      .boxd  { fill:#1f2a26; stroke:#3d8b5f; stroke-width:1.4; rx:9; }
+      .t     { fill:#e8eef7; font-size:13px; font-weight:600; }
+      .s     { fill:#9fb0c7; font-size:11px; }
+      .zt    { fill:#7c8da6; font-size:11.5px; font-weight:700; letter-spacing:.09em; }
+      .st    { fill:#5faa7d; font-size:11px; font-weight:700; letter-spacing:.06em; }
+      .ln    { stroke:#7c8da6; stroke-width:1.6; fill:none; marker-end:url(#a); }
+      .lnd   { stroke:#4f6079; stroke-width:1.3; fill:none; stroke-dasharray:4 4; }
+      .title { fill:#ffffff; font-size:19px; font-weight:700; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1000" height="1180"/>
+  <text class="title" x="30" y="36">PhishGuard — Architecture</text>
+  <text class="s" x="30" y="56">Defensive phishing simulation &amp; detection platform · Flask · 53 routes · 11 tables · offline-capable</text>
+
+  <!-- security control envelope -->
+  <rect class="sec" x="18" y="74" width="964" height="1082"/>
+  <text class="st" x="34" y="94">SECURITY CONTROLS ENVELOPE</text>
+  <text class="s" x="210" y="94">CSP · CSRF · rate limiting · security headers · 1 MiB body cap · request IDs · audit logging</text>
+
+  <!-- 1. users -->
+  <rect class="zone" x="40" y="108" width="920" height="74"/>
+  <text class="zt" x="56" y="128">USERS  (untrusted)</text>
+  <rect class="box" x="70" y="134" width="190" height="38"/><text class="t" x="86" y="152">Administrator</text><text class="s" x="86" y="166">full platform + audit</text>
+  <rect class="box" x="280" y="134" width="190" height="38"/><text class="t" x="296" y="152">Security analyst</text><text class="s" x="296" y="166">detection + campaigns</text>
+  <rect class="box" x="490" y="134" width="190" height="38"/><text class="t" x="506" y="152">Demo participant</text><text class="s" x="506" y="166">simulation + quiz only</text>
+  <rect class="box" x="700" y="134" width="220" height="38"/><text class="t" x="716" y="152">API client</text><text class="s" x="716" y="166">X-API-Key / Bearer</text>
+
+  <line class="ln" x1="500" y1="182" x2="500" y2="206"/>
+
+  <!-- 2. frontend -->
+  <rect class="zone" x="40" y="210" width="920" height="66"/>
+  <text class="zt" x="56" y="230">FRONTEND</text>
+  <rect class="box" x="70" y="236" width="270" height="32"/><text class="s" x="86" y="256">31 Jinja templates · vendored Bootstrap/Chart.js</text>
+  <rect class="box" x="356" y="236" width="270" height="32"/><text class="s" x="372" y="256">No inline script · JSON data islands</text>
+  <rect class="box" x="642" y="236" width="278" height="32"/><text class="s" x="658" y="256">Detection trace · SOC dashboard</text>
+
+  <line class="ln" x1="500" y1="276" x2="500" y2="300"/>
+
+  <!-- 3. flask -->
+  <rect class="zone" x="40" y="304" width="920" height="70"/>
+  <text class="zt" x="56" y="324">FLASK APPLICATION  —  app/__init__.py factory</text>
+  <rect class="box" x="70" y="330" width="200" height="34"/><text class="s" x="86" y="351">10 blueprints · 53 routes</text>
+  <rect class="box" x="286" y="330" width="200" height="34"/><text class="s" x="302" y="351">error handlers 400–500</text>
+  <rect class="box" x="502" y="330" width="200" height="34"/><text class="s" x="518" y="351">request ID middleware</text>
+  <rect class="box" x="718" y="330" width="202" height="34"/><text class="s" x="734" y="351">JSON envelope + slugs</text>
+
+  <line class="ln" x1="500" y1="374" x2="500" y2="398"/>
+
+  <!-- 4. authn/authz -->
+  <rect class="zone" x="40" y="402" width="920" height="70"/>
+  <text class="zt" x="56" y="422">AUTHENTICATION  &amp;  RBAC   (trust boundary)</text>
+  <rect class="boxa" x="70" y="428" width="266" height="34"/><text class="s" x="86" y="449">Flask-Login · PBKDF2-SHA256 600k</text>
+  <rect class="boxa" x="352" y="428" width="266" height="34"/><text class="s" x="368" y="449">capability_required · 3 roles</text>
+  <rect class="boxa" x="634" y="428" width="286" height="34"/><text class="s" x="650" y="449">API keys stored as SHA-256 digests</text>
+
+  <line class="ln" x1="500" y1="472" x2="500" y2="496"/>
+
+  <!-- 5. detection services -->
+  <rect class="zone" x="40" y="500" width="920" height="118"/>
+  <text class="zt" x="56" y="520">DETECTION SERVICES</text>
+  <rect class="box" x="70" y="528" width="268" height="76"/>
+  <text class="t" x="86" y="548">Email Analyzer</text>
+  <text class="s" x="86" y="566">header · sender · subject</text>
+  <text class="s" x="86" y="582">body · link · social engineering</text>
+  <text class="s" x="86" y="598">redaction before persistence</text>
+  <rect class="box" x="354" y="528" width="268" height="76"/>
+  <text class="t" x="370" y="548">URL Analyzer</text>
+  <text class="s" x="370" y="566">24 heuristics · configurable</text>
+  <text class="s" x="370" y="582">thresholds from config</text>
+  <text class="s" x="370" y="598">lexical only — never fetches</text>
+  <rect class="box" x="638" y="528" width="282" height="76"/>
+  <text class="t" x="654" y="548">Simulation Engine</text>
+  <text class="s" x="654" y="566">5 templates · 4 event types</text>
+  <text class="s" x="654" y="582">per-target access tokens</text>
+  <text class="s" x="654" y="598">no credential capture, by schema</text>
+
+  <line class="ln" x1="500" y1="618" x2="500" y2="642"/>
+
+  <!-- 6. intel + features -->
+  <rect class="zone" x="40" y="646" width="920" height="92"/>
+  <text class="zt" x="56" y="666">FEATURE ENGINEERING  &amp;  LOCAL INTELLIGENCE</text>
+  <rect class="box" x="70" y="674" width="268" height="52"/>
+  <text class="t" x="86" y="694">38 URL features</text>
+  <text class="s" x="86" y="712">lexical · hostname · protocol · semantic</text>
+  <rect class="boxd" x="354" y="674" width="268" height="52"/>
+  <text class="t" x="370" y="694">DomainIntelProvider</text>
+  <text class="s" x="370" y="712">KNOWN_SAFE / SUSPICIOUS / UNKNOWN</text>
+  <rect class="boxd" x="638" y="674" width="282" height="52"/>
+  <text class="t" x="654" y="694">Brand impersonation</text>
+  <text class="s" x="654" y="712">homoglyph · typosquat · subdomain</text>
+
+  <line class="ln" x1="300" y1="738" x2="300" y2="762"/>
+  <line class="ln" x1="700" y1="738" x2="700" y2="762"/>
+
+  <!-- 7. engines -->
+  <rect class="zone" x="40" y="766" width="920" height="80"/>
+  <text class="zt" x="56" y="786">SCORING ENGINES</text>
+  <rect class="box" x="70" y="794" width="400" height="42"/>
+  <text class="t" x="86" y="812">Rule Engine</text>
+  <text class="s" x="86" y="828">explainable indicators · deterministic weights</text>
+  <rect class="boxm" x="490" y="794" width="430" height="42"/>
+  <text class="t" x="506" y="812">ML Engine — HistGradientBoosting v1.1.0</text>
+  <text class="s" x="506" y="828">38 features · F1 0.8364 · demonstration model</text>
+
+  <line class="ln" x1="270" y1="846" x2="470" y2="872"/>
+  <line class="ln" x1="700" y1="846" x2="530" y2="872"/>
+
+  <!-- 8. fusion -->
+  <rect class="zone" x="250" y="876" width="500" height="62"/>
+  <text class="zt" x="266" y="896">RISK FUSION</text>
+  <rect class="boxa" x="276" y="902" width="448" height="30"/>
+  <text class="s" x="292" y="922">final = 0.6 × heuristic + 0.4 × ML  ·  clamped 0–100  ·  4 configurable bands</text>
+
+  <line class="ln" x1="500" y1="938" x2="500" y2="962"/>
+
+  <!-- 9. database -->
+  <rect class="zone" x="40" y="966" width="920" height="68"/>
+  <text class="zt" x="56" y="986">DATABASE   SQLite (default) / PostgreSQL</text>
+  <rect class="box" x="70" y="992" width="850" height="32"/>
+  <text class="s" x="86" y="1012">users · campaigns · campaign_targets · simulation_events · url_analyses · email_analyses · quizzes · questions · attempts · reports · audit_logs</text>
+
+  <line class="ln" x1="500" y1="1034" x2="500" y2="1058"/>
+
+  <!-- 10. outputs -->
+  <rect class="zone" x="40" y="1062" width="920" height="78"/>
+  <text class="zt" x="56" y="1082">ANALYTICS  ·  REPORTS  ·  AUDIT</text>
+  <rect class="box" x="70" y="1090" width="200" height="38"/><text class="t" x="86" y="1108">SOC dashboard</text><text class="s" x="86" y="1122">16 KPIs · 6 charts</text>
+  <rect class="box" x="286" y="1090" width="200" height="38"/><text class="t" x="302" y="1108">Incident reports</text><text class="s" x="302" y="1122">PDF · CSV · JSON</text>
+  <rect class="box" x="502" y="1090" width="200" height="38"/><text class="t" x="518" y="1108">Simulation funnel</text><text class="s" x="518" y="1122">open → click → report</text>
+  <rect class="box" x="718" y="1090" width="202" height="38"/><text class="t" x="734" y="1108">Audit trail</text><text class="s" x="734" y="1122">admin-only · redacted</text>
+
+  <!-- SSRF note -->
+  <rect class="boxd" x="640" y="612" width="300" height="0"/>
+  <text class="st" x="640" y="1158">NO OUTBOUND FETCH OF USER-SUPPLIED URLs  —  SSRF DESIGNED OUT</text>
+</svg>

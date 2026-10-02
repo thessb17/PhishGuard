@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {# Same Flask-WTF mechanism as base.html - the login page is the most
+     likely place a script would need to POST. #}
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}{{ APP_NAME }}{% endblock %} · {{ PROJECT_OWNER }} · {{ INSTITUTION }}</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/phishguard.css') }}">
+</head>
+<body>
+{% block body %}{% endblock %}
+<script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<footer class="text-center text-muted-2 py-3" style="font-size:.78rem">
+  <strong>{{ APP_NAME }}</strong> · {{ PROJECT_OWNER }} · {{ INSTITUTION }}<br>
+  {{ DEPARTMENT }} · Defensive cybersecurity internship project
+</footer>
+</body>
+</html>

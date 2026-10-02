@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Template preview{% endblock %}
+{% block page_title %}Template preview — {{ template.name }}{% endblock %}
+{% block page_subtitle %}Read-only preview · no simulation events are recorded{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-xl-8">
+    <div class="pg-mail pg-sim-watermark">
+      <div class="pg-mail-header">
+        <div class="pg-mail-row"><span class="k">From</span><span class="v"><strong>{{ template.from_name }}</strong> &lt;{{ template.from_address }}&gt;</span></div>
+        <div class="pg-mail-row"><span class="k">To</span><span class="v">demo.participant@cybersafe.edu</span></div>
+        <div class="pg-mail-row"><span class="k">Subject</span><span class="v"><strong>{{ template.subject }}</strong></span></div>
+      </div>
+      <div class="pg-mail-body">
+        {% for paragraph in template.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
+        <p><span class="pg-mail-cta">{{ template.cta_text }}</span></p>
+        <div class="pg-mail-link-preview">Displayed link: {{ template.displayed_link }}</div>
+      </div>
+      <div class="pg-mail-footer">Preview only — the call-to-action is inert on this page.</div>
+    </div>
+  </div>
+  <div class="col-xl-4">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-flag"></i> Red flags taught</h2></div>
+      <div class="pg-card-body">
+        {% for indicator in template.indicators %}
+          <div class="pg-flag">
+            <div class="pg-flag-num">{{ loop.index }}</div>
+            <div>
+              <div style="font-weight:600;font-size:.86rem">{{ indicator.title }}</div>
+              <div class="text-muted-2" style="font-size:.81rem">{{ indicator.detail }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-info-circle"></i> Template metadata</h2></div>
+      <div class="pg-card-body">
+        <dl class="pg-kv">
+          <dt>Key</dt><dd class="mono">{{ template.key }}</dd>
+          <dt>Category</dt><dd>{{ template.category }}</dd>
+          <dt>Difficulty</dt><dd>{{ template.difficulty }}</dd>
+          <dt>Teaching points</dt><dd>{{ template.teaching_points|length }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

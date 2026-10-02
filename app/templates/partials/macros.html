@@ -1,0 +1,105 @@
+{# Reusable presentation macros #}
+
+{% macro risk_badge(classification) -%}
+  <span class="pg-badge pg-badge-{{ classification|risk_class }}">
+    <i class="bi bi-shield-exclamation"></i>{{ classification }}
+  </span>
+{%- endmacro %}
+
+{% macro severity_badge(severity, points=None) -%}
+  <span class="pg-badge pg-badge-{{ severity|severity_class }}">
+    {{ severity|upper }}{% if points is not none %} · +{{ points }}{% endif %}
+  </span>
+{%- endmacro %}
+
+{% macro meter(score, classification) -%}
+  <div class="pg-meter" role="img" aria-label="Risk score {{ score }} of 100">
+    <div class="pg-meter-fill {{ classification|risk_class }}" style="width: {{ score|score_width }}%"></div>
+  </div>
+{%- endmacro %}
+
+{% macro score_row(label, value, classification, hint='') -%}
+  <div class="pg-scorebar">
+    <div class="pg-scorebar-label">{{ label }}{% if hint %} <i class="bi bi-info-circle" title="{{ hint }}"></i>{% endif %}</div>
+    {{ meter(value if value is not none else 0, classification) }}
+    <div class="pg-scorebar-value">{% if value is none %}n/a{% else %}{{ '%.1f'|format(value) }}{% endif %}</div>
+  </div>
+{%- endmacro %}
+
+{% macro kpi(label, value, icon='bi-activity', foot='', tone='') -%}
+  <div class="pg-kpi {{ tone }}">
+    <div class="pg-kpi-label"><i class="bi {{ icon }}"></i>{{ label }}</div>
+    <div class="pg-kpi-value">{{ value }}</div>
+    {% if foot %}<div class="pg-kpi-foot">{{ foot }}</div>{% endif %}
+  </div>
+{%- endmacro %}
+
+{% macro indicator_card(indicator) -%}
+  <div class="pg-indicator sev-{{ indicator.severity|severity_class }}">
+    <div class="pg-indicator-head">
+      <span class="pg-indicator-title">
+        {% if indicator.positive %}<i class="bi bi-info-circle text-info"></i>{% else %}<i class="bi bi-exclamation-triangle"></i>{% endif %}
+        {{ indicator.title }}
+      </span>
+      <span class="pg-indicator-points">
+        {% if indicator.positive or indicator.points == 0 %}
+          <span class="pg-badge pg-badge-info">context</span>
+        {% else %}
+          <span class="pg-badge pg-badge-{{ indicator.severity|severity_class }}">+{{ indicator.points }}</span>
+        {% endif %}
+      </span>
+    </div>
+    <div class="pg-indicator-meta"><strong>Evidence:</strong> {{ indicator.evidence }}</div>
+    {% if indicator.recommendation %}
+      <div class="pg-indicator-meta"><strong>Why it matters:</strong> {{ indicator.recommendation }}</div>
+    {% endif %}
+    <div class="pg-indicator-meta text-dim">
+      <span class="mono">{{ indicator.code }}</span> · category: {{ indicator.category }}
+    </div>
+  </div>
+{%- endmacro %}
+
+{% macro event_badge(event_type) -%}
+  {% set map = {'OPENED': 'info', 'LINK_CLICKED': 'danger', 'TRAINING_PAGE_VIEWED': 'warning', 'REPORTED': 'success'} %}
+  <span class="pg-badge pg-badge-{{ map.get(event_type, 'neutral') }}">{{ event_type.replace('_', ' ') }}</span>
+{%- endmacro %}
+
+{% macro empty_state(icon, message, hint='') -%}
+  <div class="pg-empty">
+    <i class="bi {{ icon }}"></i>
+    <div>{{ message }}</div>
+    {% if hint %}<div class="text-dim mt-1" style="font-size:.8rem">{{ hint }}</div>{% endif %}
+  </div>
+{%- endmacro %}
+
+{% macro pagination_nav(pagination, endpoint, extra={}) -%}
+  {% if pagination.pages > 1 %}
+    <nav aria-label="Pagination" class="mt-3">
+      <ul class="pagination justify-content-center mb-0">
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+          {% if pagination.has_prev %}
+            <a class="page-link" href="{{ url_for(endpoint, page=pagination.prev_num, **extra) }}">Previous</a>
+          {% else %}
+            <span class="page-link" aria-disabled="true" title="You are on the first page">Previous</span>
+          {% endif %}
+        </li>
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+          {% if page_num %}
+            <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+              <a class="page-link" href="{{ url_for(endpoint, page=page_num, **extra) }}">{{ page_num }}</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+          {% endif %}
+        {% endfor %}
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+          {% if pagination.has_next %}
+            <a class="page-link" href="{{ url_for(endpoint, page=pagination.next_num, **extra) }}">Next</a>
+          {% else %}
+            <span class="page-link" aria-disabled="true" title="You are on the last page">Next</span>
+          {% endif %}
+        </li>
+      </ul>
+    </nav>
+  {% endif %}
+{%- endmacro %}

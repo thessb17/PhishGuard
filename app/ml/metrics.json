@@ -1,0 +1,357 @@
+{
+  "model_name": "GradientBoosting",
+  "feature_names": [
+    "url_length",
+    "hostname_length",
+    "path_length",
+    "query_length",
+    "fragment_length",
+    "num_dots",
+    "num_hyphens",
+    "num_at",
+    "num_question",
+    "num_equals",
+    "num_ampersand",
+    "num_underscore",
+    "num_slash",
+    "num_percent",
+    "num_digits",
+    "digit_ratio",
+    "host_digit_ratio",
+    "num_subdomains",
+    "has_ip",
+    "is_https",
+    "has_port",
+    "has_punycode",
+    "is_shortener",
+    "suspicious_tld",
+    "num_suspicious_keywords",
+    "brand_in_subdomain",
+    "brand_in_path",
+    "brand_mismatch",
+    "host_entropy",
+    "path_entropy",
+    "longest_token_length",
+    "double_slash_in_path",
+    "tld_length",
+    "num_query_params",
+    "has_hex_encoding",
+    "host_hyphens",
+    "num_non_ascii",
+    "has_www_in_subdomain"
+  ],
+  "feature_means": [
+    48.79208767293642,
+    20.575314783149388,
+    14.762863360795896,
+    5.462925540183429,
+    0.1304212653505363,
+    2.307865692522929,
+    0.6700606249028447,
+    0.006140214518886989,
+    0.2495725167107104,
+    0.3400435255712731,
+    0.09466811751904244,
+    0.08619617596766672,
+    3.5719726410694856,
+    0.051842064355666094,
+    2.6032955075392508,
+    0.040883457820122995,
+    0.04810406513148765,
+    0.830949790144567,
+    0.015000777242344164,
+    0.6008860562723457,
+    0.000233172703248873,
+    0.012824498678688016,
+    0.003186693611067931,
+    0.12210477226799316,
+    0.19143478936732472,
+    0.06785325664542204,
+    0.030856521063267528,
+    0.05495103373231774,
+    3.4634313677062276,
+    2.4799450916322656,
+    12.150396393595523,
+    0.001165863516244365,
+    2.9865537074459816,
+    0.332271102129644,
+    0.0172547800404166,
+    0.36196175967666716,
+    0.0,
+    0.4207212808953832
+  ],
+  "feature_stds": [
+    31.525569943731238,
+    10.075987989450825,
+    16.725268616662508,
+    22.022236997884303,
+    2.804406177564549,
+    1.0916192189548262,
+    1.1237860214353264,
+    0.10300736808934863,
+    0.4558566370026019,
+    0.7777864604057966,
+    0.48002977983406103,
+    0.5016224601809813,
+    1.3416712971541673,
+    0.5335343428500268,
+    6.754996079961656,
+    0.07164368741168055,
+    0.12694596495217936,
+    0.8013141988796036,
+    0.12155555900276266,
+    0.4897162480965964,
+    0.01526821318096043,
+    0.1125168027999577,
+    0.05636078951626403,
+    0.32740677582691674,
+    0.6661577998844513,
+    0.25149392081728295,
+    0.1729288760477715,
+    0.22788465859744936,
+    0.42718024778037067,
+    1.6282527209448263,
+    9.44826448457253,
+    0.034124833750601054,
+    0.9929282749805887,
+    0.7303326285739915,
+    0.13021924821687658,
+    0.8063435772981545,
+    1.0,
+    0.49367487752275013
+  ],
+  "direction": [
+    -1.0,
+    1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    1.0,
+    -1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    -1.0,
+    1.0,
+    1.0,
+    1.0,
+    -1.0,
+    1.0,
+    1.0,
+    -1.0,
+    -1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    1.0,
+    1.0,
+    -1.0,
+    -1.0,
+    1.0,
+    1.0,
+    1.0,
+    -1.0
+  ],
+  "importances": [
+    0.01924081058726978,
+    0.0984467037714714,
+    0.02751222621044854,
+    0.0062803501608542575,
+    0.004242558932087548,
+    0.007049378011264158,
+    0.007284214824736127,
+    0.004342692627871075,
+    0.0,
+    0.006192329384825299,
+    0.0006435619953041418,
+    0.0009136028462721805,
+    0.04678516864044481,
+    0.01006666365570125,
+    0.030674053644626283,
+    0.033684570934253914,
+    0.1133991254536847,
+    0.1145591641238968,
+    0.0,
+    0.0,
+    0.0,
+    0.006551835548891638,
+    0.0044274580202676465,
+    0.15462010220695827,
+    0.07051687324250074,
+    0.006136702434354028,
+    0.012128729032314545,
+    0.0008349924874150903,
+    0.03060383657357299,
+    0.010176896016048223,
+    0.04436298109837152,
+    0.0,
+    0.02295771545519333,
+    0.004088481538473086,
+    0.0,
+    0.007495354932021037,
+    0.0,
+    0.09378086560860587
+  ],
+  "importance_kind": "permutation",
+  "model_version": "1.1.0",
+  "feature_version": "1.0.0",
+  "metrics": {
+    "selected_model": "GradientBoosting",
+    "models": {
+      "LogisticRegression": {
+        "accuracy": 0.8206403481504507,
+        "precision": 0.8972033257747544,
+        "recall": 0.7291154791154791,
+        "f1": 0.8044730599796679,
+        "roc_auc": 0.8682283605191095,
+        "confusion_matrix": [
+          [
+            1453,
+            136
+          ],
+          [
+            441,
+            1187
+          ]
+        ],
+        "confusion_labels": {
+          "true_negative": 1453,
+          "false_positive": 136,
+          "false_negative": 441,
+          "true_positive": 1187
+        },
+        "cv_f1_mean": 0.8061508899147134,
+        "cv_f1_std": 0.007534542535424805
+      },
+      "RandomForest": {
+        "accuracy": 0.8414672054709357,
+        "precision": 0.9464856230031949,
+        "recall": 0.7278869778869779,
+        "f1": 0.8229166666666666,
+        "roc_auc": 0.8978215944074974,
+        "confusion_matrix": [
+          [
+            1522,
+            67
+          ],
+          [
+            443,
+            1185
+          ]
+        ],
+        "confusion_labels": {
+          "true_negative": 1522,
+          "false_positive": 67,
+          "false_negative": 443,
+          "true_positive": 1185
+        },
+        "cv_f1_mean": 0.8142152559807556,
+        "cv_f1_std": 0.006056953745868783
+      },
+      "GradientBoosting": {
+        "accuracy": 0.8514143612060926,
+        "precision": 0.9443585780525502,
+        "recall": 0.7506142506142506,
+        "f1": 0.836413415468857,
+        "roc_auc": 0.8989880520717526,
+        "confusion_matrix": [
+          [
+            1517,
+            72
+          ],
+          [
+            406,
+            1222
+          ]
+        ],
+        "confusion_labels": {
+          "true_negative": 1517,
+          "false_positive": 72,
+          "false_negative": 406,
+          "true_positive": 1222
+        },
+        "cv_f1_mean": 0.829941558082061,
+        "cv_f1_std": 0.0058823009923192945
+      }
+    },
+    "test_size": 0.2,
+    "cv_folds": 5,
+    "random_state": 42,
+    "split_strategy": "random",
+    "train_rows": 12866,
+    "test_rows": 3217
+  },
+  "dataset": {
+    "path": "/home/user/phishguard/data/datasets/url_dataset.csv",
+    "version": "9ae3b72046679547",
+    "rows": 16083,
+    "phishing": 8137,
+    "legitimate": 7946,
+    "sources": {
+      "phiusiil-uci-balanced": 13937,
+      "augmentation-phish": 1200,
+      "augmentation-benign": 946
+    }
+  },
+  "trained_at": "2026-10-01T19:22:30+00:00",
+  "sklearn_version": "1.6.1",
+  "caveat": "Benchmark numbers are specific to this dataset. The PhiUSIIL corpus over-represents bare root-domain URLs in the legitimate class, so held-out scores are optimistic compared with live traffic. Re-train on organisation-specific data before operational use.",
+  "top_features": [
+    {
+      "feature": "suspicious_tld",
+      "importance": 0.15462
+    },
+    {
+      "feature": "num_subdomains",
+      "importance": 0.11456
+    },
+    {
+      "feature": "host_digit_ratio",
+      "importance": 0.1134
+    },
+    {
+      "feature": "hostname_length",
+      "importance": 0.09845
+    },
+    {
+      "feature": "has_www_in_subdomain",
+      "importance": 0.09378
+    },
+    {
+      "feature": "num_suspicious_keywords",
+      "importance": 0.07052
+    },
+    {
+      "feature": "num_slash",
+      "importance": 0.04679
+    },
+    {
+      "feature": "longest_token_length",
+      "importance": 0.04436
+    },
+    {
+      "feature": "digit_ratio",
+      "importance": 0.03368
+    },
+    {
+      "feature": "num_digits",
+      "importance": 0.03067
+    },
+    {
+      "feature": "host_entropy",
+      "importance": 0.0306
+    },
+    {
+      "feature": "path_length",
+      "importance": 0.02751
+    }
+  ]
+}

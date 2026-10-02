@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% import 'detectors/_result_common.html' as panels %}
+{% from 'partials/macros.html' import risk_badge %}
+{% from 'partials/detection_trace.html' import detection_trace %}
+{% block title %}URL analysis result{% endblock %}
+{% block page_title %}URL analysis result{% endblock %}
+{% block page_subtitle %}{{ result.hostname }} · analysis #{{ record.id }}{% endblock %}
+
+{% block content %}
+<div class="pg-card">
+  <div class="pg-card-body tight d-flex flex-wrap gap-2 align-items-center">
+    <code class="pg-code" style="flex:1 1 320px">{{ result.url }}</code>
+    <button type="button" class="btn btn-ghost btn-sm" data-copy="{{ result.url }}"><i class="bi bi-clipboard"></i> Copy</button>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('url_detector.detector') }}"><i class="bi bi-arrow-repeat"></i> Analyse another</a>
+    {% if current_user.can('report.create') %}
+      <form method="post" action="{{ url_for('reports.generate_detection_report', kind='url', analysis_id=record.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-file-earmark-bar-graph"></i> Generate report</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+{{ panels.verdict_panel(risk) }}
+
+<div class="row g-3">
+  <div class="col-xl-7">
+    {{ panels.indicators_panel(result.indicators, 'chartIndicators') }}
+  </div>
+  <div class="col-xl-5">
+    {{ panels.ml_panel(ml) }}
+
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-diagram-2"></i> Parsed URL structure</h2></div>
+      <div class="pg-card-body">
+        <dl class="pg-kv">
+          <dt>Scheme</dt><dd class="mono">{{ result.scheme }}</dd>
+          <dt>Hostname</dt><dd class="mono">{{ result.hostname }}</dd>
+          <dt>Registrable domain</dt><dd class="mono">{{ result.registrable_domain }}</dd>
+          <dt>TLD</dt><dd class="mono">{{ result.tld }}</dd>
+          <dt>Subdomain</dt><dd class="mono">{{ result.features.subdomain or '—' }}</dd>
+          <dt>Path</dt><dd class="mono" style="font-size:.78rem">{{ result.features.path or '/' }}</dd>
+          <dt>Query</dt><dd class="mono" style="font-size:.78rem">{{ result.features.query or '—' }}</dd>
+          <dt>Keywords</dt><dd>{{ result.features.keywords|join(', ') or '—' }}</dd>
+          <dt>Brands seen</dt><dd>{{ result.features.brands|join(', ') or '—' }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ panels.explanation_panel(risk) }}
+
+{% if trace %}{{ detection_trace(trace) }}{% endif %}
+
+<div class="pg-card">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-grid-3x3"></i> Extracted feature vector</h2>
+    <span class="pg-hint">{{ result.features.numeric|length }} features — identical to the ML training pipeline</span>
+  </div>
+  <div class="pg-card-body">
+    <div class="pg-pill-row">
+      {% for name, value in result.features.numeric.items() %}
+        <span class="pg-feature-chip mono">{{ name }}={{ value }}</span>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="pg-note">{{ result.disclaimer }}</div>
+
+<script id="detector-data" type="application/json">{{ {
+  'indicators': {
+    'labels': result.indicators|selectattr('points','gt',0)|map(attribute='title')|list,
+    'values': result.indicators|selectattr('points','gt',0)|map(attribute='points')|list,
+    'colors': result.indicators|selectattr('points','gt',0)|map(attribute='severity')|map('severity_color')|list
+  },
+  'attribution': {
+    'labels': (ml.explanation|map(attribute='feature')|list) if ml.available else [],
+    'values': (ml.explanation|map(attribute='contribution')|list) if ml.available else []
+  }
+}|tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/chartjs/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/detector.js') }}"></script>
+{% endblock %}

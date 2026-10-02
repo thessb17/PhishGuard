@@ -1,0 +1,78 @@
+<aside class="pg-sidebar" id="pgSidebar">
+  <div class="pg-brand">
+    <div class="pg-brand-mark"><i class="bi bi-shield-check"></i></div>
+    <div class="pg-brand-text">
+      <strong>{{ APP_NAME }}</strong><br>
+      <span>Defensive platform</span>
+    </div>
+  </div>
+
+  <nav class="pg-nav">
+    {% if current_user.can('dashboard.view') %}
+      <div class="pg-nav-label">Operations</div>
+      <a class="pg-nav-link {% if request.endpoint == 'dashboard.dashboard' %}active{% endif %}" href="{{ url_for('dashboard.dashboard') }}">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+    {% endif %}
+
+    {% if current_user.can('campaign.view') %}
+      <a class="pg-nav-link {% if request.blueprint == 'campaigns' %}active{% endif %}" href="{{ url_for('campaigns.list_campaigns') }}">
+        <i class="bi bi-megaphone"></i> Campaigns
+      </a>
+    {% endif %}
+
+    <a class="pg-nav-link {% if request.blueprint == 'simulator' %}active{% endif %}" href="{{ url_for('simulator.inbox') }}">
+      <i class="bi bi-inbox"></i> Simulator
+    </a>
+
+    {% if current_user.can('analysis.run') %}
+      <div class="pg-nav-label">Detection</div>
+      <a class="pg-nav-link {% if request.blueprint == 'email_detector' %}active{% endif %}" href="{{ url_for('email_detector.detector') }}">
+        <i class="bi bi-envelope-exclamation"></i> Email detector
+      </a>
+      <a class="pg-nav-link {% if request.blueprint == 'url_detector' %}active{% endif %}" href="{{ url_for('url_detector.detector') }}">
+        <i class="bi bi-link-45deg"></i> URL detector
+      </a>
+    {% endif %}
+
+    <div class="pg-nav-label">Awareness</div>
+    <a class="pg-nav-link {% if request.endpoint == 'awareness.index' or request.endpoint == 'awareness.topic' %}active{% endif %}" href="{{ url_for('awareness.index') }}">
+      <i class="bi bi-mortarboard"></i> Training
+    </a>
+    <a class="pg-nav-link {% if request.endpoint in ('awareness.quiz', 'awareness.quiz_result') %}active{% endif %}" href="{{ url_for('awareness.quiz') }}">
+      <i class="bi bi-patch-question"></i> Quiz
+    </a>
+
+    {% if current_user.can('report.view') %}
+      <div class="pg-nav-label">Evidence</div>
+      <a class="pg-nav-link {% if request.blueprint == 'reports' %}active{% endif %}" href="{{ url_for('reports.list_reports') }}">
+        <i class="bi bi-file-earmark-bar-graph"></i> Reports
+      </a>
+    {% endif %}
+
+    {% if current_user.can('audit.view') %}
+      <a class="pg-nav-link {% if request.endpoint == 'admin.audit_logs' %}active{% endif %}" href="{{ url_for('admin.audit_logs') }}">
+        <i class="bi bi-journal-text"></i> Audit logs
+      </a>
+    {% endif %}
+    {% if current_user.can('user.manage') %}
+      <a class="pg-nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}" href="{{ url_for('admin.users') }}">
+        <i class="bi bi-people"></i> Users
+      </a>
+    {% endif %}
+
+    <div class="pg-nav-label">Account</div>
+    <a class="pg-nav-link {% if request.endpoint == 'auth.profile' %}active{% endif %}" href="{{ url_for('auth.profile') }}">
+      <i class="bi bi-person-circle"></i> Profile
+    </a>
+    <a class="pg-nav-link" href="{{ url_for('auth.logout') }}">
+      <i class="bi bi-box-arrow-right"></i> Sign out
+    </a>
+  </nav>
+
+  <div class="pg-sidebar-footer">
+    <div><i class="bi bi-shield-lock"></i> {{ APP_NAME }} v{{ APP_VERSION }}</div>
+    <div class="mt-1">Defensive simulation only — no credentials are ever collected.</div>
+    <div class="mt-2" style="font-size:.72rem">{{ PROJECT_OWNER }} · {{ INSTITUTION }}</div>
+  </div>
+</aside>

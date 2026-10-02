@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import empty_state, risk_badge %}
+{% block title %}URL detector{% endblock %}
+{% block page_title %}URL phishing detector{% endblock %}
+{% block page_subtitle %}Offline, string-level analysis — PhishGuard never visits the URL{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-xl-8">
+    <div class="pg-card">
+      <div class="pg-card-header">
+        <h2><i class="bi bi-link-45deg"></i> Analyse a URL</h2>
+        <span class="pg-hint">Rule-based indicators + ML classifier</span>
+      </div>
+      <div class="pg-card-body">
+        <form method="post" action="{{ url_for('url_detector.detector') }}" novalidate>
+          {{ form.hidden_tag() }}
+          <div class="mb-3">
+            {{ form.url.label(class='form-label') }}
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-globe2"></i></span>
+              {{ form.url(class='form-control mono', id='urlInput', placeholder='https://example.com/login?verify=1', autocomplete='off') }}
+            </div>
+            {% for error in form.url.errors %}<div class="text-danger" style="font-size:.78rem">{{ error }}</div>{% endfor %}
+          </div>
+          {{ form.submit(class='btn btn-primary') }}
+        </form>
+
+        <div class="pg-divider"></div>
+        <div class="form-label">Sample URLs for the demo</div>
+        <div class="pg-pill-row">
+          {% for url, label in samples %}
+            <button type="button" class="pg-feature-chip" data-fill-target="#urlInput" data-fill-value="{{ url }}" title="{{ url }}">
+              <i class="bi bi-magic"></i> {{ label }}
+            </button>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-clock-history"></i> Recent URL analyses</h2></div>
+      <div class="pg-table-wrap">
+        <table class="pg-table">
+          <thead><tr><th>URL</th><th>Rule</th><th>ML</th><th>Final</th><th>Verdict</th></tr></thead>
+          <tbody>
+            {% for row in recent %}
+              <tr>
+                <td><a class="mono" style="font-size:.76rem" href="{{ url_for('url_detector.view_analysis', analysis_id=row.id) }}">{{ row.url[:52] }}{% if row.url|length > 52 %}…{% endif %}</a></td>
+                <td>{{ '%.0f'|format(row.heuristic_score) }}</td>
+                <td>{% if row.ml_score is not none %}{{ '%.0f'|format(row.ml_score) }}{% else %}<span class="text-dim">n/a</span>{% endif %}</td>
+                <td><strong>{{ '%.1f'|format(row.final_score) }}</strong></td>
+                <td>{{ risk_badge(row.classification) }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="5">{{ empty_state('bi-link', 'No URL analyses stored yet.') }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-cpu"></i> ML model</h2></div>
+      <div class="pg-card-body">
+        {% if ml_meta.available %}
+          <dl class="pg-kv">
+            <dt>Model</dt><dd>{{ ml_meta.model_name }}</dd>
+            <dt>Features</dt><dd>{{ ml_meta.feature_count }}</dd>
+            <dt>Trained</dt><dd>{{ ml_meta.trained_at }}</dd>
+            {% set metrics = ml_meta.metrics.models[ml_meta.model_name] if ml_meta.metrics and ml_meta.metrics.models and ml_meta.model_name in ml_meta.metrics.models else None %}
+            {% if metrics %}
+              <dt>Accuracy</dt><dd>{{ '%.2f'|format(metrics.accuracy * 100) }}%</dd>
+              <dt>Precision</dt><dd>{{ '%.2f'|format(metrics.precision * 100) }}%</dd>
+              <dt>Recall</dt><dd>{{ '%.2f'|format(metrics.recall * 100) }}%</dd>
+              <dt>F1</dt><dd>{{ '%.4f'|format(metrics.f1) }}</dd>
+              <dt>ROC-AUC</dt><dd>{{ '%.4f'|format(metrics.roc_auc) }}</dd>
+            {% endif %}
+            <dt>Dataset</dt><dd>{{ ml_meta.dataset.rows }} URLs ({{ ml_meta.dataset.phishing }} phishing)</dd>
+          </dl>
+        {% else %}
+          {{ empty_state('bi-cpu', 'No trained model loaded.', 'Run: python -m app.ml.train') }}
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-exclamation-diamond"></i> Interpretation limits</h2></div>
+      <div class="pg-card-body">
+        <ul class="pg-feature-list mb-0">
+          <li><i class="bi bi-dash-circle"></i><span><strong>HTTPS proves nothing.</strong> Most phishing sites use valid TLS certificates.</span></li>
+          <li><i class="bi bi-dash-circle"></i><span><strong>False positives happen.</strong> Long, parameter-heavy corporate URLs can trigger structural rules.</span></li>
+          <li><i class="bi bi-dash-circle"></i><span><strong>False negatives happen.</strong> A compromised legitimate site produces a clean-looking URL.</span></li>
+          <li><i class="bi bi-dash-circle"></i><span><strong>No network calls.</strong> Reputation, DNS age and page content are out of scope by design.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

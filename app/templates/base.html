@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {# Standard Flask-WTF mechanism for JavaScript: unsafe fetch/XHR requests
+     read this and send it as the X-CSRFToken header. The current UI is
+     entirely form-based and makes no unsafe JS requests, but the token is
+     published here so any future script uses the supported path rather than
+     inventing one. #}
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}{{ APP_NAME }}{% endblock %} · {{ PROJECT_OWNER }} · {{ INSTITUTION }}</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/phishguard.css') }}">
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+<div class="pg-shell">
+  {% include 'partials/sidebar.html' %}
+
+  <div class="pg-main">
+    <div class="pg-safety-banner">
+      <i class="bi bi-shield-check"></i> {{ SIMULATION_BANNER }}
+    </div>
+
+    <header class="pg-topbar">
+      <button class="btn btn-ghost btn-sm pg-nav-toggle" type="button" data-nav-toggle aria-label="Toggle navigation">
+        <i class="bi bi-list"></i>
+      </button>
+      <div class="flex-grow-1">
+        <h1>{% block page_title %}{{ self.title() }}{% endblock %}</h1>
+        <div class="pg-sub">{% block page_subtitle %}{{ APP_TAGLINE }}{% endblock %}</div>
+      </div>
+      <div class="d-none d-md-flex align-items-center gap-2">
+        <span class="pg-badge pg-badge-info">{{ current_user.role_label }}</span>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <div class="pg-avatar" title="{{ current_user.full_name or current_user.username }}">{{ current_user.initials() }}</div>
+        <div class="d-none d-lg-block">
+          <div style="font-size:.84rem;font-weight:600">{{ current_user.full_name or current_user.username }}</div>
+          <div class="pg-sub">{{ current_user.organization }}</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="pg-content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="mb-3">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'danger' if category == 'error' else category }} d-flex align-items-start gap-2 py-2" data-autodismiss>
+                <i class="bi bi-{{ 'check-circle' if category == 'success' else ('exclamation-triangle' if category in ('danger','error','warning') else 'info-circle') }} mt-1"></i>
+                <div>{{ message }}</div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+      <footer class="text-center text-muted-2 py-3 mt-3" style="font-size:.78rem">
+        <strong>{{ APP_NAME }}</strong> · {{ PROJECT_OWNER }} · {{ INSTITUTION }}<br>
+        {{ DEPARTMENT }} · Defensive cybersecurity internship project
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,45 @@
+# PhishGuard - Phishing Attack Simulation and Detection Platform
+# Pinned to the versions the project was built and tested against.
+
+# --- Web framework -----------------------------------------------------------
+Flask==3.1.3
+Werkzeug==3.1.9
+Jinja2==3.1.6
+MarkupSafe==3.0.3
+itsdangerous==2.2.0
+click==8.4.2
+blinker==1.9.0
+
+# --- Flask extensions --------------------------------------------------------
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.1.0
+Flask-Login==0.6.3
+Flask-WTF==1.3.0
+Flask-Limiter==4.1.1
+WTForms==3.2.2
+email-validator==2.3.0
+
+# --- Database ----------------------------------------------------------------
+SQLAlchemy==2.1.1
+alembic==1.20.0
+psycopg2-binary==2.9.13          # only needed for the PostgreSQL/Docker profile
+
+# --- Machine learning --------------------------------------------------------
+scikit-learn==1.6.1
+pandas==2.2.3
+numpy==2.3.5
+scipy==1.17.1
+joblib==1.5.3
+
+# --- Reporting ---------------------------------------------------------------
+reportlab==5.0.1
+
+# --- Configuration -----------------------------------------------------------
+python-dotenv==1.2.3
+
+# --- Serving -----------------------------------------------------------------
+gunicorn==26.2.0
+
+# --- Tests -------------------------------------------------------------------
+pytest==9.0.3
+pytest-cov==7.1.0

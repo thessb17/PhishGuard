@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Quiz result{% endblock %}
+{% block page_title %}Assessment result{% endblock %}
+{% block page_subtitle %}{{ quiz.title }} · completed {{ attempt.completed_at|fmt_datetime }}{% endblock %}
+
+{% block content %}
+<div class="pg-card">
+  <div class="pg-card-body">
+    <div class="pg-risk-panel">
+      <div class="pg-gauge">
+        <div class="pg-gauge-value">{{ attempt.score }}<small>%</small></div>
+        <div class="pg-gauge-label">
+          <span class="pg-badge pg-badge-{{ 'success' if attempt.passed else 'danger' }}">{{ 'PASSED' if attempt.passed else 'NOT PASSED' }}</span>
+        </div>
+      </div>
+      <div>
+        <dl class="pg-kv">
+          <dt>Correct answers</dt><dd>{{ attempt.correct_count }} of {{ attempt.total_questions }}</dd>
+          <dt>Questions answered</dt><dd>{{ attempt.answered_count }} of {{ attempt.total_questions }}</dd>
+          <dt>Pass mark</dt><dd>{{ quiz.pass_mark }}%</dd>
+          <dt>Completed</dt><dd>{{ attempt.completed_at|fmt_datetime }}</dd>
+        </dl>
+        <div class="pg-note mt-2">
+          {% if attempt.passed %}
+            Well done. Review any incorrect answers below — phishing tactics change, so re-take the
+            assessment after each campaign.
+          {% else %}
+            Work through the explanations below and the training modules, then try again. The goal is
+            recognition speed, not memorisation.
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pg-card">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-list-check"></i> Answer review</h2>
+    <span class="pg-hint">Explanations for every question</span>
+  </div>
+  <div class="pg-card-body">
+    {% for row in attempt.answers %}
+      <div class="pg-question">
+        <div class="pg-question-num">
+          Question {{ loop.index }}
+          {% if row.correct %}
+            <span class="pg-badge pg-badge-success">Correct</span>
+          {% else %}
+            <span class="pg-badge pg-badge-danger">{{ 'Incorrect' if row.selected_index is not none else 'Not answered' }}</span>
+          {% endif %}
+        </div>
+        <p class="prompt">{{ row.prompt }}</p>
+        {% for option in row.options %}
+          {% set idx = loop.index0 %}
+          <div class="pg-option {% if idx == row.correct_index %}correct{% elif idx == row.selected_index %}incorrect{% endif %}">
+            {% if idx == row.correct_index %}<i class="bi bi-check-circle-fill" style="color:var(--pg-low)"></i>
+            {% elif idx == row.selected_index %}<i class="bi bi-x-circle-fill" style="color:var(--pg-critical)"></i>
+            {% else %}<i class="bi bi-circle text-dim"></i>{% endif %}
+            {{ option }}
+          </div>
+        {% endfor %}
+        <div class="pg-note mt-2"><strong>Why:</strong> {{ row.explanation }}</div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="d-flex gap-2">
+  <a class="btn btn-primary btn-sm" href="{{ url_for('awareness.quiz') }}"><i class="bi bi-arrow-repeat"></i> Retake the assessment</a>
+  <a class="btn btn-ghost btn-sm" href="{{ url_for('awareness.index') }}"><i class="bi bi-book"></i> Back to training</a>
+</div>
+{% endblock %}

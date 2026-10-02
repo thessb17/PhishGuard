@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import empty_state, pagination_nav, risk_badge %}
+{% block title %}Campaigns{% endblock %}
+{% block page_title %}Simulation campaigns{% endblock %}
+{% block page_subtitle %}Controlled awareness exercises — no credentials are collected at any point{% endblock %}
+
+{% block content %}
+<div class="pg-card">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-megaphone"></i> Campaigns</h2>
+    <div class="d-flex gap-2 align-items-center">
+      <form method="get" class="d-flex gap-2">
+        <select name="status" class="form-select form-select-sm" style="width:auto">
+          <option value="">All statuses</option>
+          {% for status in statuses %}
+            <option value="{{ status }}" {% if status == status_filter %}selected{% endif %}>{{ status|title }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-ghost btn-sm" type="submit"><i class="bi bi-funnel"></i></button>
+      </form>
+      {% if current_user.can('campaign.create') %}
+        <a class="btn btn-primary btn-sm" href="{{ url_for('campaigns.create') }}"><i class="bi bi-plus-lg"></i> New campaign</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="pg-table-wrap">
+    <table class="pg-table">
+      <thead>
+        <tr>
+          <th>Campaign</th><th>Template</th><th>Difficulty</th><th>Status</th>
+          <th>Participants</th><th>Interaction</th><th>Reported</th><th>Awareness</th><th>Residual risk</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in summaries %}
+          {% set c = row.campaign %}{% set s = row.stats %}
+          <tr>
+            <td>
+              <a href="{{ url_for('campaigns.detail', campaign_id=c.id) }}"><strong>{{ c.name }}</strong></a>
+              <div class="text-dim" style="font-size:.74rem">{{ c.created_at|fmt_date }} · by {{ c.created_by.username if c.created_by else 'system' }}</div>
+            </td>
+            <td class="text-muted-2">{{ (templates[c.template_key].name if c.template_key in templates else c.template_key) }}</td>
+            <td><span class="pg-badge pg-badge-neutral">{{ c.difficulty }}</span></td>
+            <td><span class="pg-badge pg-badge-{{ c.status_badge }}">{{ c.status }}</span></td>
+            <td>{{ s.participants }}</td>
+            <td><span class="pg-badge pg-badge-{{ 'critical' if s.interaction_rate >= 50 else ('high' if s.interaction_rate >= 25 else 'medium' if s.interaction_rate > 0 else 'low') }}">{{ s.interaction_rate }}%</span></td>
+            <td><span class="pg-badge pg-badge-success">{{ s.report_rate }}%</span></td>
+            <td>{{ s.awareness_score }}/100</td>
+            <td>{{ risk_badge(s.risk_level) }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="9">{{ empty_state('bi-megaphone', 'No campaigns match this filter.', 'Create one to start a safe awareness exercise.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="pg-card-body tight">
+    {{ pagination_nav(pagination, 'campaigns.list_campaigns', {'status': status_filter} if status_filter else {}) }}
+  </div>
+</div>
+
+<div class="pg-card">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-collection"></i> Available simulation templates</h2>
+    <span class="pg-hint">Preview renders the message without recording any event</span>
+  </div>
+  <div class="pg-card-body">
+    <div class="row g-3">
+      {% for key, template in templates.items() %}
+        <div class="col-md-6 col-xl-4">
+          <div class="pg-indicator sev-info h-100">
+            <div class="pg-indicator-head">
+              <span class="pg-indicator-title">{{ template.name }}</span>
+              <span class="pg-badge pg-badge-neutral">{{ template.difficulty }}</span>
+            </div>
+            <div class="pg-indicator-meta">{{ template.category }}</div>
+            <div class="pg-indicator-meta text-dim">“{{ template.subject[:64] }}”</div>
+            <a class="btn btn-ghost btn-sm mt-2" href="{{ url_for('simulator.preview', template_key=key) }}">
+              <i class="bi bi-eye"></i> Preview
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

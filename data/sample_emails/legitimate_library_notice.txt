@@ -1,0 +1,19 @@
+From: library-notices@cybersafe.edu
+Reply-To: library-notices@cybersafe.edu
+Return-Path: <library-notices@cybersafe.edu>
+Received: from mx1.cybersafe.edu (mx1.cybersafe.edu [198.51.100.10]) by mail.cybersafe.edu; Tue, 10 Mar 2026 09:14:02 +0000
+Received: from lib-app01.cybersafe.edu (lib-app01.cybersafe.edu [198.51.100.44]) by mx1.cybersafe.edu; Tue, 10 Mar 2026 09:14:01 +0000
+Authentication-Results: mx.cybersafe.edu; spf=pass smtp.mailfrom=cybersafe.edu; dkim=pass header.d=cybersafe.edu; dmarc=pass header.from=cybersafe.edu
+Subject: Your interlibrary loan is ready for collection
+
+Hello Priya,
+
+The book you requested through interlibrary loan has arrived and is waiting at
+the Central Library help desk until 14 March.
+
+You can review your current loans in the library portal:
+https://library.cybersafe.edu/account/loans
+
+Kind regards,
+Central Library
+Andhra University

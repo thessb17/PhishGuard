@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Awareness quiz{% endblock %}
+{% block page_title %}{{ quiz.title }}{% endblock %}
+{% block page_subtitle %}{{ quiz.question_count }} questions · pass mark {{ quiz.pass_mark }}% · explanations provided for every answer{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-xl-9">
+    <form method="post" action="{{ url_for('awareness.submit_quiz') }}">
+      {{ form.hidden_tag() }}
+      {% for question in quiz.questions %}
+        <div class="pg-question">
+          <div class="pg-question-num">Question {{ loop.index }} of {{ quiz.question_count }} · {{ question.category }}</div>
+          <p class="prompt">{{ question.prompt }}</p>
+          {% for option in question.options %}
+            <label class="pg-option">
+              <input type="radio" name="question-{{ question.id }}" value="{{ loop.index0 }}">
+              {{ option }}
+            </label>
+          {% endfor %}
+        </div>
+      {% endfor %}
+      <button class="btn btn-primary" type="submit"><i class="bi bi-send"></i> Submit answers</button>
+    </form>
+  </div>
+
+  <div class="col-xl-3">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-info-circle"></i> How grading works</h2></div>
+      <div class="pg-card-body">
+        <ul class="pg-feature-list mb-0">
+          <li><i class="bi bi-1-circle"></i><span>Unanswered questions count as incorrect.</span></li>
+          <li><i class="bi bi-2-circle"></i><span>Every answer is explained afterwards, right or wrong.</span></li>
+          <li><i class="bi bi-3-circle"></i><span>Your attempt is stored with the score, the answered count and the completion date.</span></li>
+          <li><i class="bi bi-4-circle"></i><span>Passing removes you from the "needs training" list on the dashboard.</span></li>
+        </ul>
+      </div>
+    </div>
+    {% if attempts %}
+      <div class="pg-card">
+        <div class="pg-card-header"><h2><i class="bi bi-clock-history"></i> Previous attempts</h2></div>
+        <div class="pg-card-body tight">
+          {% for attempt in attempts %}
+            <div class="d-flex justify-content-between align-items-center py-1" style="font-size:.84rem">
+              <a href="{{ url_for('awareness.quiz_result', attempt_id=attempt.id) }}">{{ attempt.completed_at|fmt_datetime }}</a>
+              <span class="pg-badge pg-badge-{{ 'success' if attempt.passed else 'danger' }}">{{ attempt.score }}%</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

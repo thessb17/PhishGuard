@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import risk_badge, indicator_card, score_row %}
+{% block title %}Stored email analysis{% endblock %}
+{% block page_title %}Stored email analysis #{{ record.id }}{% endblock %}
+{% block page_subtitle %}{{ record.sender or 'unknown sender' }} · analysed {{ record.created_at|fmt_datetime }}{% endblock %}
+
+{% block content %}
+<div class="pg-card">
+  <div class="pg-card-body tight d-flex flex-wrap gap-2 align-items-center">
+    <div style="flex:1 1 320px">
+      <div style="font-weight:600">{{ record.subject or '(no subject)' }}</div>
+      <div class="text-dim mono" style="font-size:.76rem">from {{ record.sender }}{% if record.reply_to %} · reply-to {{ record.reply_to }}{% endif %}</div>
+    </div>
+    {% if current_user.can('report.create') %}
+      <form method="post" action="{{ url_for('reports.generate_detection_report', kind='email', analysis_id=record.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-file-earmark-bar-graph"></i> Generate report</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-xl-5">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-speedometer2"></i> Verdict</h2></div>
+      <div class="pg-card-body">
+        <div class="pg-gauge mb-3">
+          <div class="pg-gauge-value">{{ '%.0f'|format(record.final_score) }}<small>/100</small></div>
+          <div class="pg-gauge-label">{{ risk_badge(record.classification) }}</div>
+        </div>
+        {{ score_row('Rule-based', record.heuristic_score, record.classification) }}
+        {{ score_row('ML score', record.ml_score, record.classification) }}
+        {{ score_row('Final', record.final_score, record.classification) }}
+        <div class="pg-note mt-2">{{ record.recommendation }}</div>
+      </div>
+    </div>
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-file-text"></i> Redacted body excerpt</h2></div>
+      <div class="pg-card-body">
+        <pre class="pg-code" style="max-height:280px;overflow:auto">{{ record.body_excerpt }}</pre>
+        <div class="pg-note mt-2">Stored copy is redacted and truncated ({{ record.body_length }} characters submitted).</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-7">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-list-check"></i> Indicators</h2></div>
+      <div class="pg-card-body">
+        {% for indicator in record.indicators %}{{ indicator_card(indicator) }}{% endfor %}
+      </div>
+    </div>
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-question-circle"></i> Score derivation</h2></div>
+      <div class="pg-table-wrap">
+        <table class="pg-table">
+          <thead><tr><th>Step</th><th>Detail</th><th>Value</th></tr></thead>
+          <tbody>
+            {% for step in record.explanation %}
+              <tr><td><strong>{{ step.step }}</strong></td><td class="text-muted-2">{{ step.detail }}</td><td class="mono">{{ step.value }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,166 @@
+name: CI
+
+# Runs on every push and pull request. Requires NO secrets and NO external
+# services: the dataset and the trained model are committed, so the whole
+# pipeline works offline on a clean runner.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyflakes
+
+      # ---- 2. syntax ----------------------------------------------------
+      - name: Byte-compile every module
+        run: python -m compileall -q app scripts tests train.py run.py
+
+      - name: Lint with pyflakes
+        run: |
+          # report_service.py has one deliberate availability probe carrying
+          # '# noqa: F401'; pyflakes does not honour noqa, so it is filtered.
+          python -m pyflakes app/ scripts/ tests/ train.py run.py \
+            | grep -v "report_service.py.*'reportlab' imported but unused" \
+            | tee /tmp/pyflakes.txt
+          test ! -s /tmp/pyflakes.txt
+
+      # ---- 5. imports ---------------------------------------------------
+      - name: Verify every app module imports
+        run: |
+          python - <<'PY'
+          import importlib, pkgutil, sys
+          failed = []
+          for mod in pkgutil.walk_packages(["app"], prefix="app."):
+              try:
+                  importlib.import_module(mod.name)
+              except Exception as exc:
+                  failed.append(f"{mod.name}: {type(exc).__name__}: {exc}")
+          for f in failed:
+              print("FAIL", f)
+          sys.exit(1 if failed else 0)
+          PY
+
+      # ---- 3 + 4. tests and coverage ------------------------------------
+      - name: Run the test suite with coverage
+        run: pytest -q --cov=app --cov-report=term --cov-report=xml
+
+      - name: Enforce a coverage floor
+        run: |
+          python - <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          rate = float(ET.parse("coverage.xml").getroot().get("line-rate", 0)) * 100
+          print(f"line coverage: {rate:.1f}%")
+          # Floor, not a target. Raise it as coverage improves; never lower it
+          # to make a red build green.
+          sys.exit(0 if rate >= 80.0 else 1)
+          PY
+
+      # ---- 6. application actually starts -------------------------------
+      - name: Seed the database
+        run: python scripts/seed_database.py --reset --quiet
+
+      - name: Configuration self-check
+        env:
+          FLASK_APP: run.py
+        run: python -m flask security-check
+
+      - name: Start the app and probe it
+        run: |
+          HOST=127.0.0.1 PORT=5000 FLASK_DEBUG=0 python run.py &
+          APP_PID=$!
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:5000/api/health > /dev/null; then break; fi
+            sleep 1
+          done
+          echo "--- /api/health ---"
+          curl -fsS http://127.0.0.1:5000/api/health
+          echo
+          echo "--- /login must render ---"
+          curl -fsS -o /dev/null -w 'login HTTP %{http_code}\n' http://127.0.0.1:5000/login
+          echo "--- unauthenticated dashboard must NOT be 200 ---"
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+                 -H 'Accept: text/html' http://127.0.0.1:5000/dashboard)
+          echo "dashboard HTTP $code"
+          test "$code" = "302"
+          kill $APP_PID
+
+      - name: End-to-end acceptance run
+        run: |
+          HOST=127.0.0.1 PORT=5000 FLASK_DEBUG=0 python run.py &
+          APP_PID=$!
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:5000/api/health > /dev/null; then break; fi
+            sleep 1
+          done
+          python scripts/acceptance_check.py
+          python scripts/frontend_check.py
+          kill $APP_PID
+
+      - name: Upload coverage artifact
+        if: matrix.python-version == '3.13'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
+          retention-days: 7
+
+  ml-reproducibility:
+    name: ML artifact reproduces
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Training is seeded, so the committed metrics must be reproducible.
+      # If this job fails, either the pipeline became non-deterministic or the
+      # committed metrics no longer match the code that produced them.
+      - name: Retrain and compare against the committed metrics
+        run: |
+          cp app/ml/metrics.json /tmp/committed.json
+          python train.py --quiet
+          python - <<'PY'
+          import json, sys
+          old = json.load(open("/tmp/committed.json"))["metrics"]["models"]
+          new = json.load(open("app/ml/metrics.json"))["metrics"]["models"]
+          bad = []
+          for name, stats in old.items():
+              for metric in ("accuracy", "precision", "recall", "f1"):
+                  a, b = stats[metric], new[name][metric]
+                  if abs(a - b) > 1e-4:
+                      bad.append(f"{name}.{metric}: committed {a:.4f} != rebuilt {b:.4f}")
+          print("\n".join(bad) if bad else "all metrics reproduce exactly")
+          sys.exit(1 if bad else 0)
+          PY

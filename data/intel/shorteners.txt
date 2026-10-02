@@ -1,0 +1,16 @@
+# URL shortening services. Presence is a NEUTRAL-to-WEAK signal: shorteners
+# are used legitimately every day. It matters because the true destination
+# is hidden from lexical analysis.
+bit.ly
+tinyurl.com
+goo.gl
+t.co
+ow.ly
+is.gd
+buff.ly
+rebrand.ly
+cutt.ly
+shorturl.at
+rb.gy
+tiny.cc
+lnkd.in

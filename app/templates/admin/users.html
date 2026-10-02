@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import empty_state, pagination_nav %}
+{% block title %}User management{% endblock %}
+{% block page_title %}User management{% endblock %}
+{% block page_subtitle %}Role assignment and account state for the fictional demo directory{% endblock %}
+
+{% block content %}
+<div class="pg-card">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-people"></i> Accounts</h2>
+    <form method="get" class="d-flex gap-2">
+      <select name="role" class="form-select form-select-sm" style="width:auto">
+        <option value="">All roles</option>
+        {% for role in roles %}<option value="{{ role }}" {% if role == role_filter %}selected{% endif %}>{{ role_labels[role] }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-ghost btn-sm" type="submit"><i class="bi bi-funnel"></i></button>
+    </form>
+  </div>
+  <div class="pg-table-wrap">
+    <table class="pg-table">
+      <thead>
+        <tr><th>User</th><th>Organization</th><th>Role</th><th>State</th><th>Last login</th><th>Failed logins</th><th style="min-width:230px">Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for user in pagination.items %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="pg-avatar">{{ user.initials() }}</div>
+                <div>
+                  <div style="font-weight:600">{{ user.full_name }}</div>
+                  <div class="text-dim mono" style="font-size:.73rem">{{ user.username }} · {{ user.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="text-muted-2" style="font-size:.8rem">
+              {{ user.organization }}
+              <div class="text-dim">{{ user.department or '—' }}</div>
+            </td>
+            <td><span class="pg-badge pg-badge-info">{{ user.role_label }}</span></td>
+            <td>
+              {% if user.is_locked %}
+                <span class="pg-badge pg-badge-warning">locked</span>
+              {% elif user.is_active_account %}
+                <span class="pg-badge pg-badge-success">active</span>
+              {% else %}
+                <span class="pg-badge pg-badge-danger">disabled</span>
+              {% endif %}
+            </td>
+            <td class="text-muted-2" style="font-size:.78rem">{{ user.last_login_at|fmt_datetime if user.last_login_at else 'never' }}</td>
+            <td class="text-muted-2">{{ user.failed_login_count }}</td>
+            <td>
+              <div class="d-flex gap-2 flex-wrap">
+                <form method="post" action="{{ url_for('admin.change_role', user_id=user.id) }}" class="d-flex gap-1">
+                  {{ form.hidden_tag() }}
+                  <select name="role" class="form-select form-select-sm" style="width:auto">
+                    {% for role in roles %}<option value="{{ role }}" {% if role == user.role %}selected{% endif %}>{{ role_labels[role] }}</option>{% endfor %}
+                  </select>
+                  <button class="btn btn-ghost btn-sm" type="submit" {% if user.id == current_user.id %}disabled title="You cannot change your own role"{% endif %}>
+                    <i class="bi bi-check2"></i>
+                  </button>
+                </form>
+                <form method="post" action="{{ url_for('admin.change_status', user_id=user.id) }}"
+                      data-confirm="{{ 'Disable' if user.is_active_account else 'Enable' }} the account {{ user.username }}?">
+                  {{ form.hidden_tag() }}
+                  <button class="btn btn-ghost btn-sm" type="submit" {% if user.id == current_user.id %}disabled title="You cannot disable your own account"{% endif %}>
+                    <i class="bi {{ 'bi-pause-circle' if user.is_active_account else 'bi-play-circle' }}"></i>
+                    {{ 'Disable' if user.is_active_account else 'Enable' }}
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="7">{{ empty_state('bi-people', 'No accounts match this filter.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="pg-card-body tight">
+    {{ pagination_nav(pagination, 'admin.users', {'role': role_filter} if role_filter else {}) }}
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-shield-lock"></i> Administrator</h2></div>
+      <div class="pg-card-body"><p class="text-muted-2 mb-0" style="font-size:.85rem">Full platform control: campaigns, analysis, reports, audit log and user management.</p></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-graph-up"></i> Security analyst</h2></div>
+      <div class="pg-card-body"><p class="text-muted-2 mb-0" style="font-size:.85rem">Runs campaigns, detectors and reporting. No user management, no audit-log access.</p></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="pg-card">
+      <div class="pg-card-header"><h2><i class="bi bi-person"></i> Demo user</h2></div>
+      <div class="pg-card-body"><p class="text-muted-2 mb-0" style="font-size:.85rem">Participates in simulations and training only. Cannot see other people's data.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="pg-note">
+  Every account here is fictional and exists only for this demonstration. Disabling an account also
+  clears its lockout counter, which is the documented way to release a locked-out demo user.
+</div>
+{% endblock %}

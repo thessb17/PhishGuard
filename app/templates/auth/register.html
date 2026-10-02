@@ -1,0 +1,54 @@
+{% extends 'base_public.html' %}
+{% block title %}Register{% endblock %}
+{% block body %}
+<div class="pg-auth">
+  <aside class="pg-auth-aside">
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="" width="52" height="52">
+      <div>
+        <div style="font-size:1.6rem;font-weight:700">{{ APP_NAME }}</div>
+        <div class="text-muted-2" style="font-size:.86rem">Demo participant registration</div>
+      </div>
+    </div>
+    <p class="text-muted-2" style="max-width:46ch">
+      Self-service registration creates a <strong>Demo User</strong> account only. Demo users can
+      take part in safe simulations, view their own results and complete awareness training.
+      Analyst and administrator roles must be granted by an administrator.
+    </p>
+    <div class="pg-note mt-3">
+      Password policy: at least 10 characters, combining three of lowercase, uppercase,
+      digits and symbols. Passwords are stored as salted PBKDF2-HMAC-SHA256 hashes.
+    </div>
+  </aside>
+
+  <section class="pg-auth-panel">
+    <div class="pg-auth-card">
+      <div class="pg-card">
+        <div class="pg-card-header"><h2><i class="bi bi-person-plus"></i> Create demo account</h2></div>
+        <div class="pg-card-body">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'danger' if category in ('error','danger') else category }} py-2">{{ message }}</div>
+            {% endfor %}
+          {% endwith %}
+
+          <form method="post" action="{{ url_for('auth.register') }}" novalidate>
+            {{ form.hidden_tag() }}
+            {% for field in [form.username, form.full_name, form.email, form.department, form.password, form.confirm] %}
+              <div class="mb-3">
+                {{ field.label(class='form-label') }}
+                {{ field(class='form-control') }}
+                {% for error in field.errors %}<div class="text-danger" style="font-size:.78rem">{{ error }}</div>{% endfor %}
+              </div>
+            {% endfor %}
+            {{ form.submit(class='btn btn-primary w-100') }}
+          </form>
+          <div class="text-center mt-3" style="font-size:.84rem">
+            <a href="{{ url_for('auth.login') }}">Back to sign in</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{#
+  Detection decision trace.
+
+  Renders the pipeline INPUT -> FEATURES -> RULES -> ML -> FUSION -> VERDICT as
+  a vertical sequence of expandable stages. Uses <details>/<summary> so it works
+  with no JavaScript at all, which keeps it compatible with the strict CSP
+  (script-src 'self', no inline script) and keyboard-navigable for free.
+#}
+{% macro detection_trace(trace, open_stage='rules') %}
+<div class="pg-card">
+  <div class="pg-card-header">
+    <h2><i class="bi bi-diagram-3"></i> Detection trace</h2>
+    <span class="pg-sub">How was this score calculated?</span>
+  </div>
+  <div class="pg-card-body">
+    <p class="pg-note mb-3">
+      Every stage below is the data the pipeline actually produced for this
+      input. Expand a stage to see its inputs and outputs. Nothing here is
+      recomputed for display &mdash; if the trace and the verdict disagreed,
+      the trace would be useless.
+    </p>
+
+    <ol class="pg-trace">
+      {% for stage in trace %}
+        <li class="pg-trace-step">
+          <div class="pg-trace-marker" aria-hidden="true">{{ loop.index }}</div>
+          <details class="pg-trace-body" {% if stage.key == open_stage %}open{% endif %}>
+            <summary>
+              <span class="pg-trace-title">{{ stage.title }}</span>
+              <span class="pg-trace-summary">{{ stage.summary }}</span>
+            </summary>
+
+            {% if stage.rows %}
+              <div class="pg-table-wrap mt-2">
+                <table class="pg-table pg-table-compact">
+                  <tbody>
+                    {% for row in stage.rows %}
+                      <tr>
+                        <th scope="row" style="width:38%">{{ row.label }}</th>
+                        <td><code class="pg-code">{{ row.value }}</code></td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% endif %}
+
+            {% if stage.indicators %}
+              <div class="mt-2">
+                {% for ind in stage.indicators %}
+                  <div class="pg-indicator">
+                    <div class="pg-indicator-head">
+                      <span class="pg-indicator-title">{{ ind.title }}</span>
+                      {% if ind.points %}
+                        <span class="pg-indicator-points">
+                          {{ '%+.1f'|format(ind.points) }}
+                        </span>
+                      {% endif %}
+                      <span class="pg-badge pg-badge-{{ (ind.severity or 'info')|lower }}">
+                        {{ ind.severity or 'INFO' }}
+                      </span>
+                    </div>
+                    {% if ind.evidence %}
+                      <div class="pg-indicator-meta">{{ ind.evidence }}</div>
+                    {% endif %}
+                    {% if ind.recommendation %}
+                      <div class="pg-sub">{{ ind.recommendation }}</div>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            {% if stage.caveat %}
+              <div class="pg-note mt-2"><i class="bi bi-info-circle"></i> {{ stage.caveat }}</div>
+            {% endif %}
+          </details>
+        </li>
+      {% endfor %}
+    </ol>
+  </div>
+</div>
+{% endmacro %}
